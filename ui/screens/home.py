@@ -28,6 +28,7 @@ class HomeScreen(Screen):
         ("t", "new_task"),
         ("d", "view_dashboard"),
         ("q", "quit"),
+        ("/", "global_search"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -36,6 +37,7 @@ class HomeScreen(Screen):
             Static("n - New note ", classes="shortcut"),
             Static("t - New task ", classes="shortcut"),
             Static("d - Dashboard", classes="shortcut"),
+            Static("/ - Search   ", classes="shortcut"),
             Static("q - Quit     ", classes="shortcut"),
             id="home",
         )

@@ -3,10 +3,14 @@ NewNoteModal {
 }
 
 #new-note-modal {
-    width: 40;
-    height: 10;
+    width: 60;
+    height: 15;
     padding: 1 2;
     border: round lightsteelblue;
     background: $surface;
     align: center middle;
+}
+
+#title {
+    text-style: bold;
 }

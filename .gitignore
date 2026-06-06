@@ -1,2 +1,3 @@
 .venv/
 ignora/
+__pycache__/

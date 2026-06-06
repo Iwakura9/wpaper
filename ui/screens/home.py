@@ -19,6 +19,8 @@ def load_random_logo() -> str:
     return choice(logos).strip().strip('"')
 
 class HomeScreen(Screen):
+    CSS_PATH = "home.tcss"
+
     BINDINGS = [
         ("n", "new_note"),
         ("t", "new_task"),
@@ -29,10 +31,10 @@ class HomeScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Vertical(
             Static(load_random_logo(), id="logo"),
-            Static("n - New note", classes="shortcut"),
-            Static("t - New task", classes="shortcut"),
+            Static("n - New note ", classes="shortcut"),
+            Static("t - New task ", classes="shortcut"),
             Static("d - Dashboard", classes="shortcut"),
-            Static("q - Quit", classes="shortcut"),
+            Static("q - Quit     ", classes="shortcut"),
             id="home",
         )
 

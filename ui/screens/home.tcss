@@ -1,0 +1,16 @@
+#home {
+    align: center middle;
+}
+
+.shortcut {
+    content-align: center middle;
+    text-style: bold;
+    margin: 1 0 0 0;
+}
+
+#logo {
+    content-align: center middle;
+    color: lightsteelblue;
+    margin-top: -2;
+    margin-bottom: 3;
+}

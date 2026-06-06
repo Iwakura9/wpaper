@@ -3,10 +3,7 @@ from ui.screens.home import HomeScreen
 
 
 class WpaperApp(App):
-
     TITLE = "wpaper"
-
-    CSS_PATH = "ui/style.tcss"
 
     SCREENS = {
         "home": HomeScreen

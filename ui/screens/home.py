@@ -6,6 +6,8 @@ from textual.widgets import Static
 from textual.screen import Screen
 from textual.containers import Vertical
 
+from ui.screens.modals.new_note_modal import NewNoteModal
+
 def load_random_logo() -> str:
     logos_path = Path("ui/logos.txt")
     content = logos_path.read_text(encoding="utf-8")
@@ -39,10 +41,10 @@ class HomeScreen(Screen):
         )
 
     def action_new_note(self) -> None:
-        self.app.push_screen("note_editor")
+        self.app.push_screen(NewNoteModal())
 
-    def action_new_task(self) -> None:
-        self.app.push_screen("task_editor")
+    # def action_new_task(self) -> None:
+    #     self.app.push_screen(NewTaskModal())
 
     def action_view_dashboard(self) -> None:
         self.app.push_screen("dashboard")

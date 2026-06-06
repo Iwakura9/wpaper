@@ -34,7 +34,6 @@ class NewNoteModal(ModalScreen):
         yield Vertical(
             Input(placeholder="Title", id="title"),
             Horizontal(
-                Label(date.today().strftime("%d %b, %Y")),
                 Select(
                     [
                         ("writing", NoteStatus.WRITING),
@@ -44,21 +43,23 @@ class NewNoteModal(ModalScreen):
                     ],
                     value=NoteStatus.WRITING,
                     allow_blank=False,
+                    compact=True,
                     id="status",
                 ),
+                Label(date.today().strftime("%d %b, %Y"), id="date"),
                 id="date_and_status_row",
             ),
-            Input(placeholder="Tags", id="tags"),
+            Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
                 Button("Create", variant="primary", id="create_note_button"),
-                id="modal-buttons",
+                id="modal_buttons",
             ),
-            id="new-note-modal"
+            id="new_note_modal"
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "cancel":
+        if event.button.id == "cancel_button":
             self.dismiss()
             return
         if event.button.id == "create_note_button":

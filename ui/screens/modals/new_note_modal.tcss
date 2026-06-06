@@ -2,15 +2,61 @@ NewNoteModal {
   align: center middle;
 }
 
-#new-note-modal {
+#new_note_modal {
     width: 60;
     height: 15;
-    padding: 1 2;
-    border: round lightsteelblue;
+    padding: 1 2 0 2;
     background: $surface;
     align: center middle;
 }
 
 #title {
     text-style: bold;
+    margin-bottom: 1;
+    border: blank;
+}
+
+#date_and_status_row {
+    width: 100%;
+}
+
+#date {
+    content-align: right middle;
+    width: 1fr;
+    text-style: bold;
+    margin-left: 2;
+    margin-right: 2;
+    padding-right: 1;
+}
+
+#status {
+    align: left middle;
+    width: 14;
+    padding-left: 1;
+    margin-left: 2;
+    border-left: solid lightslategrey;
+}
+
+
+#tags {
+    margin-left: 2;
+    margin-right: 2;
+    padding-left: 1;
+    padding-right: 1;
+    text-style: italic;
+    color: mediumslateblue;
+    border-left: solid mediumslateblue;
+}
+
+#modal_buttons {
+    width: 100%;
+    margin-top: 2;
+}
+
+#cancel_button {
+    dock: left;
+}
+
+#create_note_button {
+    dock: right;
 }

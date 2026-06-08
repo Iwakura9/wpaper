@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 from enum import Enum
 from functools import Placeholder
 from statistics import variance
@@ -19,8 +19,11 @@ class NoteStatus(Enum):
 class NewNoteData:
     title: str
     status: NoteStatus
-    # task: str  # possívelmente vai ter que mudar aqui no futuro
-    tags: str | None =None
+    created_at: str
+    updated_at: datetime
+    content: str = ""
+    tags: list[str] | None =None
+    # related_task_id: int | None =None
 
 class NewNoteModal(ModalScreen):
     CSS_PATH = "new_note_modal.tcss"
@@ -46,7 +49,7 @@ class NewNoteModal(ModalScreen):
                     compact=True,
                     id="status",
                 ),
-                Label(date.today().strftime("%d %b, %Y"), id="date"),
+                Label(datetime.now().strftime("%d %b, %Y"), id="date"),
                 id="date_and_status_row",
             ),
             Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
@@ -73,7 +76,6 @@ class NewNoteModal(ModalScreen):
 
     def create_note(self) -> None:
         title = self.query_one("#title", Input).value.strip()
-
         if not title:
             self.notify("Title is required", severity="error")
             return
@@ -82,12 +84,22 @@ class NewNoteModal(ModalScreen):
         if not isinstance(status, NoteStatus):
             status = NoteStatus.WRITING
 
-        tags = self.query_one("#tags", Input).value.strip() or None
+        tags_input = self.query_one("#tags", Input).value.strip()
+        tags = []
+        for tag in tags_input.split(","):
+            if tag.strip():
+                clean_tag = tag.strip().lower()
+                tags.append(clean_tag)
+
+        # related_task_id = alguma coisa
 
         self.dismiss(
             NewNoteData(
                 title=title,
                 status=status,
                 tags=tags,
+                created_at=datetime.now().strftime("%d %b, %Y"),
+                updated_at=datetime.now(),
+                # related_task_id=related_task_id,
             )
         )

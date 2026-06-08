@@ -35,6 +35,7 @@ class WritingScreen(Screen):
             ),
             id="writing_screen"
         )
+        yield Footer(compact=True)
 
     def on_mount(self) -> None:
         self.query_one("#note_body", TextArea).focus()

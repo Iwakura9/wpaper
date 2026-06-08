@@ -10,6 +10,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
 
 from models.note import NoteStatus, NewNoteData
+from db.notes import create_note
 
 
 class NewNoteModal(ModalScreen):
@@ -80,13 +81,12 @@ class NewNoteModal(ModalScreen):
 
         # related_task_id = alguma coisa
 
-        self.dismiss(
-            NewNoteData(
-                title=title,
-                status=status,
-                tags=tags,
-                created_at=datetime.now().strftime("%d %b, %Y"),
-                updated_at=datetime.now(),
-                # related_task_id=related_task_id,
-            )
+        note_data = NewNoteData(
+            title=title,
+            status=status,
+            tags=tags,
         )
+
+        note = create_note(note_data)
+
+        self.dismiss(note)

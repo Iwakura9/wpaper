@@ -7,7 +7,7 @@ def initialize_db() -> None:
            CREATE TABLE IF NOT EXISTS notes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
-            content TEXT DEFAULT NOT NULL '',
+            content TEXT NOT NULL DEFAULT '',
             status TEXT NOT NULL DEFAULT 'writing',
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL

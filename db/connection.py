@@ -10,6 +10,6 @@ def get_connection() -> sqlite3.Connection:
 
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row  # pra poder acessar as colunas por nome
-    connection.execute("PRAGMA foreing_keys = ON")
+    connection.execute("PRAGMA foreign_keys = ON")
 
     return connection

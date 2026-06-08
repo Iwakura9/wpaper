@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from models.note import NewNoteData, NoteStatus
+from models.note import NewNoteData, Note
 from db.connection import get_connection
 
 def now_timestamp() -> int:
     # função pra retornar data e horário em segundos
     return int(datetime.now().timestamp())
 
-def create_note(note: NewNoteData, content: str="") -> int: # retorna ID
+def create_note(data: NewNoteData) -> Note: # retorna ID
     now = now_timestamp()
 
     with get_connection() as con:
@@ -22,9 +22,9 @@ def create_note(note: NewNoteData, content: str="") -> int: # retorna ID
             VALUES (?, ?, ?, ?, ?)
         """,
             (
-                note.title,
-                content,
-                note.status.value,
+                data.title,
+                "",
+                data.status.value,
                 now,
                 now,
                 # TODO: colocar linked_task_id
@@ -36,7 +36,15 @@ def create_note(note: NewNoteData, content: str="") -> int: # retorna ID
         if note_id is None:
             raise RuntimeError("Failed to create note")
         else:
-            return note_id
+            return Note(
+                id=note_id,
+                title=data.title,
+                status=data.status,
+                content="",
+                created_at=now,
+                updated_at=now,
+                tags=data.tags,
+            )
 
 
 def update_note_content(note_id: int, content: str) -> None:

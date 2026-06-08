@@ -9,21 +9,8 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
 
-class NoteStatus(Enum):
-    WRITING = "writing"
-    DONE = "done"
-    HIATUS = "hiatus"
-    ABANDONED = "abandoned"
+from models.note import NoteStatus, NewNoteData
 
-@dataclass
-class NewNoteData:
-    title: str
-    status: NoteStatus
-    created_at: str
-    updated_at: datetime
-    content: str = ""
-    tags: list[str] | None =None
-    # related_task_id: int | None =None
 
 class NewNoteModal(ModalScreen):
     CSS_PATH = "new_note_modal.tcss"

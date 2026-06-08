@@ -6,8 +6,9 @@ from textual.widgets import Static
 from textual.screen import Screen
 from textual.containers import Vertical
 
-from ui.screens.modals.new_note_modal import NewNoteData, NewNoteModal
+from ui.screens.modals.new_note_modal import NewNoteModal
 from ui.screens.writing import WritingScreen
+from models.note import Note
 
 def load_random_logo() -> str:
     logos_path = Path("ui/logos.txt")
@@ -46,7 +47,7 @@ class HomeScreen(Screen):
     def action_new_note(self) -> None:
         self.app.push_screen(NewNoteModal(), self.open_writing_screen)
 
-    def open_writing_screen(self, note: NewNoteData | None) -> None:
+    def open_writing_screen(self, note: Note | None) -> None:
         if note is None:
             return
         self.app.push_screen(WritingScreen(note))
@@ -54,8 +55,8 @@ class HomeScreen(Screen):
     # def action_new_task(self) -> None:
     #     self.app.push_screen(NewTaskModal())
 
-    def action_view_dashboard(self) -> None:
-        self.app.push_screen("dashboard")
+    # def action_view_dashboard(self) -> None:
+    #     self.app.push_screen("dashboard")
 
     def action_quit(self) -> None:
         self.app.exit()

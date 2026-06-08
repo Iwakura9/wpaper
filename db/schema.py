@@ -2,7 +2,7 @@ from db.connection import get_connection
 
 
 def initialize_db() -> None:
-    with get_connection as con:
+    with get_connection() as con:
         con.execute("""
            CREATE TABLE IF NOT EXISTS notes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

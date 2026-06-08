@@ -1,5 +1,5 @@
 from textual.screen import Screen
-from textual.containers import Horizontal, Vertical
+from textual.containers import Vertical
 from textual.app import ComposeResult
 from textual.widgets import Footer, Static, TextArea
 from datetime import datetime

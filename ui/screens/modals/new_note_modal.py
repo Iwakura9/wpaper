@@ -52,6 +52,9 @@ class NewNoteModal(ModalScreen):
         if event.button.id == "create_note_button":
             self.create_note()
 
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        self.create_note()
+
     def action_cancel(self) -> None:
         self.dismiss()
 

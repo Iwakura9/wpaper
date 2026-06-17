@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from models.note import NewNoteData, Note
+from models.note import NewNoteData, Note, NoteStatus
 from db.connection import get_connection
 
 def now_timestamp() -> int:
@@ -60,3 +60,30 @@ def update_note_content(note_id: int, content: str) -> None:
                 note_id,
             ),
         )
+
+def list_notes() -> list[Note]:
+    with get_connection() as con:
+        rows = con.execute("""
+            SELECT
+                id,
+                title,
+                content,
+                status,
+                created_at,
+                updated_at
+            FROM notes
+            ORDER BY updated_at DESC, id DESC
+        """).fetchall()
+
+    return [
+        Note(
+            id=row["id"],
+            title=row["title"],
+            content=row["content"],
+            status=NoteStatus(row["status"]),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            tags=None,
+        )
+        for row in rows
+    ]

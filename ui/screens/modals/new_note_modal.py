@@ -1,8 +1,4 @@
-from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
-from functools import Placeholder
-from statistics import variance
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -55,6 +51,9 @@ class NewNoteModal(ModalScreen):
             return
         if event.button.id == "create_note_button":
             self.create_note()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        self.create_note()
 
     def action_cancel(self) -> None:
         self.dismiss()

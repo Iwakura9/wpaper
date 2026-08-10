@@ -1,17 +1,20 @@
+import subprocess
 from textual.screen import Screen
 from textual.containers import Vertical
 from textual.app import ComposeResult
 from textual.widgets import Footer, Static, TextArea
 from datetime import datetime
 
+from config import resolve_editor
 from models.note import Note
-from db.notes import read_content, write_content
+from db.notes import note_path, read_content, write_content
 
 class WritingScreen(Screen):
     CSS_PATH = "writing.tcss"
 
     BINDINGS = [
         ("ctrl+s", "save_note", "Save"),
+        ("ctrl+e", "open_in_editor", "Open in editor"),
         ("ctrl+c", "quit_no_save", "Quit"), # temporário, depois tirar
         # ("escape", "open_menu", ) --> abrir um menu com informações/metadados
     ]
@@ -54,6 +57,23 @@ class WritingScreen(Screen):
 
         # Futuramente salvar os metadados no SQLite e depois excluir essa bosta
         # self.notify("Save is not implemented yet", severity="warning")
+
+    def action_open_in_editor(self) -> None:
+        # salva o buffer atual antes de suspender, senão o editor externo abre
+        # uma versão desatualizada do arquivo
+        text_area = self.query_one("#note_body", TextArea)
+        write_content(self.note, text_area.text)
+
+        editor = resolve_editor()
+        try:
+            with self.app.suspend():
+                subprocess.call([editor, str(note_path(self.note))])
+        except FileNotFoundError:
+            self.notify(f"Could not find editor '{editor}'", severity="error")
+            return
+
+        text_area.text = read_content(self.note)
+        self.notify(f"Reloaded from {editor}")
 
     def action_open_menu(self) -> None:
         # menuzinho pra poder ver/alterar os metadados, salvar e sair

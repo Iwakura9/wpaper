@@ -61,8 +61,8 @@ class HomeScreen(Screen):
         if task is not None:
             self.notify(f"Task '{task.title}' created!")
 
-    # def action_view_dashboard(self) -> None:
-    #     self.app.push_screen("dashboard")
+    def action_view_dashboard(self) -> None:
+        self.app.push_screen("dashboard")
 
     def action_quit(self) -> None:
         self.app.exit()

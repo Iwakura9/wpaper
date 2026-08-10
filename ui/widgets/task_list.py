@@ -42,3 +42,7 @@ class TaskList(Widget):
                 deadline_str,
                 key=str(task.id),
             )
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        # editing a task from here isn't built yet
+        self.notify("Task editing is not implemented yet")

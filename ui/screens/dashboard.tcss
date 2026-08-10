@@ -1,0 +1,53 @@
+#dashboard {
+    height: 1fr;
+}
+
+#top_row {
+    height: 14;
+}
+
+#stats {
+    width: 1fr;
+    border-right: solid lightslategrey;
+    padding: 1 2;
+}
+
+#stats_title {
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#tasks {
+    width: 2fr;
+    padding: 1 2;
+}
+
+#notes {
+    height: 1fr;
+    padding: 1 2;
+    border-top: solid lightslategrey;
+}
+
+#note_grid, #note_kanban {
+    height: 1fr;
+}
+
+.note_card {
+    width: 24;
+    height: 5;
+    margin: 0 1 1 0;
+    padding: 1;
+    background: $surface;
+    border: solid mediumslateblue;
+}
+
+.kanban_column {
+    width: 1fr;
+    height: 1fr;
+    margin-right: 1;
+}
+
+.kanban_column_title {
+    text-style: bold;
+    margin-bottom: 1;
+}

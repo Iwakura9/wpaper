@@ -5,6 +5,7 @@ from pathlib import Path
 from config import NOTES_DIR
 from models.note import NewNoteData, Note, NoteStatus
 from db.connection import get_connection
+from db.tags import set_note_tags, tags_for_note
 
 def now_timestamp() -> int:
     # função pra retornar data e horário em segundos
@@ -37,16 +38,17 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
                 title,
                 status,
                 created_at,
-                updated_at
+                updated_at,
+                linked_task_id
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
         """,
             (
                 data.title,
                 data.status.value,
                 now,
                 now,
-                # TODO: colocar linked_task_id
+                data.linked_task_id,
             ),
         )
 
@@ -63,6 +65,9 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
     NOTES_DIR.mkdir(parents=True, exist_ok=True)
     (NOTES_DIR / filename).write_text("", encoding="utf-8")
 
+    tags = data.tags or []
+    set_note_tags(note_id, tags)
+
     return Note(
         id=note_id,
         title=data.title,
@@ -70,7 +75,8 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
         filename=filename,
         created_at=now,
         updated_at=now,
-        tags=data.tags,
+        tags=tags_for_note(note_id),
+        linked_task_id=data.linked_task_id,
     )
 
 
@@ -83,7 +89,8 @@ def list_notes() -> list[Note]:
                 filename,
                 status,
                 created_at,
-                updated_at
+                updated_at,
+                linked_task_id
             FROM notes
             ORDER BY updated_at DESC, id DESC
         """).fetchall()
@@ -96,7 +103,8 @@ def list_notes() -> list[Note]:
             status=NoteStatus(row["status"]),
             created_at=row["created_at"],
             updated_at=row["updated_at"],
-            tags=None,
+            tags=tags_for_note(row["id"]),
+            linked_task_id=row["linked_task_id"],
         )
         for row in rows
     ]

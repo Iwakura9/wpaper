@@ -43,6 +43,7 @@ class NewTaskModal(ModalScreen):
             ),
             Input(placeholder="Deadline (YYYY-MM-DD, optional)", compact=True, id="deadline"),
             Input(placeholder="Description", compact=True, id="description"),
+            # ponytail: sem autocomplete de tags, adicionar quando a lista passar de ~20
             Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
             Horizontal(
                 Button("Cancel", id="cancel_button"),

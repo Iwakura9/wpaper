@@ -37,6 +37,7 @@ class NewNoteModal(ModalScreen):
                 Label(datetime.now().strftime("%d %b, %Y"), id="date"),
                 id="date_and_status_row",
             ),
+            # ponytail: sem autocomplete de tags, adicionar quando a lista passar de ~20
             Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
             Select(
                 [(task.title, task.id) for task in list_tasks()],

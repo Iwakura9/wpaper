@@ -13,7 +13,7 @@ class NewNoteData:
     title: str
     status: NoteStatus
     tags: list[str] | None =None
-    # related_task_id: int | None =None
+    linked_task_id: int | None = None
 
 @dataclass
 class Note:
@@ -24,9 +24,4 @@ class Note:
     updated_at: int
     filename: str
     tags: list[str] | None =None
-
-# fluxo:
-# modalscreen aparece pedindo NewNoteData: Titulo, Status e tags; futuramente task associada
-# modalscreen -> create_note (notes.db)
-# create_note recebe NewNoteData, adiciona ID e datas
-# salva no BD e retorna Note com todas as informações
+    linked_task_id: int | None = None

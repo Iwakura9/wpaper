@@ -32,7 +32,37 @@ def _m02_notes_to_files(con: sqlite3.Connection) -> None:
     con.execute("ALTER TABLE notes DROP COLUMN content")
 
 
-MIGRATIONS = [_m01_notes, _m02_notes_to_files]
+def _m03_tasks_and_tags(con: sqlite3.Connection) -> None:
+    con.execute("""
+        CREATE TABLE tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending',
+            importance INTEGER NOT NULL DEFAULT 3,
+            deadline INTEGER,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        )
+    """)
+    con.execute("""
+        CREATE TABLE note_tags (
+            note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+            tag TEXT NOT NULL,
+            PRIMARY KEY (note_id, tag)
+        )
+    """)
+    con.execute("""
+        CREATE TABLE task_tags (
+            task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+            tag TEXT NOT NULL,
+            PRIMARY KEY (task_id, tag)
+        )
+    """)
+    con.execute("ALTER TABLE notes ADD COLUMN linked_task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL")
+
+
+MIGRATIONS = [_m01_notes, _m02_notes_to_files, _m03_tasks_and_tags]
 
 
 def initialize_db() -> None:

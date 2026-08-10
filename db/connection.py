@@ -1,8 +1,6 @@
 import sqlite3
-from pathlib import Path
 
-# Caminho temporário
-DB_PATH = Path("db/wpaper.sqlite")
+from config import DB_PATH
 
 
 def get_connection() -> sqlite3.Connection:

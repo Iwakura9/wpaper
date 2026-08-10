@@ -24,4 +24,16 @@ The goal is to feel closer to tools like Neovim, being fast, keyboard-driven, mi
 * ...
 
 ## How to install
-...
+
+```bash
+git clone https://github.com/Iwakura9/wpaper.git
+cd wpaper
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python wpaper.py
+```
+
+Data (the sqlite db and note `.md` files) is stored under `~/.local/share/wpaper` by
+default. Set `WPAPER_DATA_DIR` to use a different location (e.g. a Syncthing-synced
+folder).

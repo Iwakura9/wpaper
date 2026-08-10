@@ -2,6 +2,7 @@ from datetime import datetime
 
 from models.task import NewTaskData, Task, TaskStatus
 from db.connection import get_connection
+from db.tags import set_task_tags, tags_for_task
 
 
 def now_timestamp() -> int:
@@ -40,6 +41,9 @@ def create_task(data: NewTaskData) -> Task:
         if task_id is None:
             raise RuntimeError("Failed to create task")
 
+    tags = data.tags or []
+    set_task_tags(task_id, tags)
+
     return Task(
         id=task_id,
         title=data.title,
@@ -49,7 +53,7 @@ def create_task(data: NewTaskData) -> Task:
         deadline=data.deadline,
         created_at=now,
         updated_at=now,
-        tags=data.tags,
+        tags=tags_for_task(task_id),
     )
 
 
@@ -93,7 +97,7 @@ def list_tasks() -> list[Task]:
             deadline=row["deadline"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
-            tags=None,
+            tags=tags_for_task(row["id"]),
         )
         for row in rows
     ]

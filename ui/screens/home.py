@@ -7,8 +7,10 @@ from textual.screen import Screen
 from textual.containers import Vertical
 
 from ui.screens.modals.new_note_modal import NewNoteModal
+from ui.screens.modals.new_task_modal import NewTaskModal
 from ui.screens.writing import WritingScreen
 from models.note import Note
+from models.task import Task
 
 def load_random_logo() -> str:
     logos_path = Path(__file__).parent.parent / "logos.txt"
@@ -52,8 +54,12 @@ class HomeScreen(Screen):
             return
         self.app.push_screen(WritingScreen(note))
 
-    # def action_new_task(self) -> None:
-    #     self.app.push_screen(NewTaskModal())
+    def action_new_task(self) -> None:
+        self.app.push_screen(NewTaskModal(), self.on_task_created)
+
+    def on_task_created(self, task: Task | None) -> None:
+        if task is not None:
+            self.notify(f"Task '{task.title}' created!")
 
     # def action_view_dashboard(self) -> None:
     #     self.app.push_screen("dashboard")

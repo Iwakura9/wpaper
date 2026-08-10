@@ -7,6 +7,7 @@ from textual.widgets import Button, Input, Label, Select
 
 from models.note import NoteStatus, NewNoteData
 from db.notes import create_note
+from db.tasks import list_tasks
 
 
 class NewNoteModal(ModalScreen):
@@ -37,6 +38,13 @@ class NewNoteModal(ModalScreen):
                 id="date_and_status_row",
             ),
             Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
+            Select(
+                [(task.title, task.id) for task in list_tasks()],
+                prompt="Link to a task (optional)",
+                allow_blank=True,
+                compact=True,
+                id="linked_task",
+            ),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
                 Button("Create", variant="primary", id="create_note_button"),
@@ -78,12 +86,15 @@ class NewNoteModal(ModalScreen):
                 clean_tag = tag.strip().lower()
                 tags.append(clean_tag)
 
-        # related_task_id = alguma coisa
+        linked_task_id = self.query_one("#linked_task", Select).value
+        if linked_task_id is Select.NULL:
+            linked_task_id = None
 
         note_data = NewNoteData(
             title=title,
             status=status,
             tags=tags,
+            linked_task_id=linked_task_id,
         )
 
         note = create_note(note_data)

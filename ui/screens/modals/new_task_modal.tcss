@@ -1,10 +1,10 @@
-NewNoteModal {
+NewTaskModal {
   align: center middle;
 }
 
-#new_note_modal {
+#new_task_modal {
     width: 60;
-    height: 17;
+    height: 21;
     padding: 1 2 0 2;
     background: $surface;
     align: center middle;
@@ -16,31 +16,39 @@ NewNoteModal {
     border: blank;
 }
 
-#date_and_status_row {
+#status_and_importance_row {
     width: 100%;
-}
-
-#date {
-    content-align: right middle;
-    width: 1fr;
-    text-style: bold;
-    margin-left: 2;
-    margin-right: 2;
-    padding-right: 1;
 }
 
 #status {
     align: left middle;
-    width: 14;
+    width: 18;
+    padding-left: 1;
+}
+
+#importance {
+    align: left middle;
+    width: 10;
     padding-left: 1;
     margin-left: 2;
     border-left: solid lightslategrey;
 }
 
+#deadline {
+    margin-top: 1;
+    padding-left: 1;
+    padding-right: 1;
+    border-left: solid lightslategrey;
+}
+
+#description {
+    margin-top: 1;
+    padding-left: 1;
+    padding-right: 1;
+}
 
 #tags {
-    margin-left: 2;
-    margin-right: 2;
+    margin-top: 1;
     padding-left: 1;
     padding-right: 1;
     text-style: italic;
@@ -57,6 +65,6 @@ NewNoteModal {
     dock: left;
 }
 
-#create_note_button {
+#create_task_button {
     dock: right;
 }

@@ -5,7 +5,7 @@ from textual.widgets import Footer, Static, TextArea
 from datetime import datetime
 
 from models.note import Note
-from db.notes import update_note_content
+from db.notes import read_content, write_content
 
 class WritingScreen(Screen):
     CSS_PATH = "writing.tcss"
@@ -40,14 +40,15 @@ class WritingScreen(Screen):
         yield Footer(compact=True)
 
     def on_mount(self) -> None:
-        self.query_one("#note_body", TextArea).focus()
+        text_area = self.query_one("#note_body", TextArea)
+        text_area.text = read_content(self.note)
+        text_area.focus()
 
     def action_save_note(self): # -> None (?):
         # puxa o que estiver escrito na area de texto
         body = self.query_one("#note_body", TextArea).text
-        # e manda pra funçao de atualizar o conteudo, que pede id e o texto
-        update_note_content(self.note.id, body)
-        self.note.content = body
+        # e manda pra funçao de atualizar o conteudo, que pede a nota e o texto
+        write_content(self.note, body)
 
         self.notify("Note saved!")
 

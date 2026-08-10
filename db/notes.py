@@ -1,11 +1,32 @@
+import re
 from datetime import datetime
+from pathlib import Path
 
+from config import NOTES_DIR
 from models.note import NewNoteData, Note, NoteStatus
 from db.connection import get_connection
 
 def now_timestamp() -> int:
     # função pra retornar data e horário em segundos
     return int(datetime.now().timestamp())
+
+def slugify(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+
+def note_path(note: Note) -> Path:
+    return NOTES_DIR / note.filename
+
+def read_content(note: Note) -> str:
+    return note_path(note).read_text(encoding="utf-8")
+
+def write_content(note: Note, content: str) -> None:
+    note_path(note).write_text(content, encoding="utf-8")
+
+    with get_connection() as con:
+        con.execute(
+            "UPDATE notes SET updated_at = ? WHERE id = ?",
+            (now_timestamp(), note.id),
+        )
 
 def create_note(data: NewNoteData) -> Note: # retorna ID
     now = now_timestamp()
@@ -14,16 +35,14 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
         cursor = con.execute("""
             INSERT INTO notes (
                 title,
-                content,
                 status,
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
         """,
             (
                 data.title,
-                "",
                 data.status.value,
                 now,
                 now,
@@ -35,31 +54,25 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
 
         if note_id is None:
             raise RuntimeError("Failed to create note")
-        else:
-            return Note(
-                id=note_id,
-                title=data.title,
-                status=data.status,
-                content="",
-                created_at=now,
-                updated_at=now,
-                tags=data.tags,
-            )
 
+        slug = slugify(data.title)
+        filename = f"{note_id}-{slug}.md" if slug else f"{note_id}.md"
 
-def update_note_content(note_id: int, content: str) -> None:
-    with get_connection() as con:
-        con.execute("""
-            UPDATE notes
-            SET content = ?, updated_at = ?
-            WHERE id = ?
-            """,
-            (
-                content,
-                now_timestamp(),
-                note_id,
-            ),
-        )
+        con.execute("UPDATE notes SET filename = ? WHERE id = ?", (filename, note_id))
+
+    NOTES_DIR.mkdir(parents=True, exist_ok=True)
+    (NOTES_DIR / filename).write_text("", encoding="utf-8")
+
+    return Note(
+        id=note_id,
+        title=data.title,
+        status=data.status,
+        filename=filename,
+        created_at=now,
+        updated_at=now,
+        tags=data.tags,
+    )
+
 
 def list_notes() -> list[Note]:
     with get_connection() as con:
@@ -67,7 +80,7 @@ def list_notes() -> list[Note]:
             SELECT
                 id,
                 title,
-                content,
+                filename,
                 status,
                 created_at,
                 updated_at
@@ -79,7 +92,7 @@ def list_notes() -> list[Note]:
         Note(
             id=row["id"],
             title=row["title"],
-            content=row["content"],
+            filename=row["filename"],
             status=NoteStatus(row["status"]),
             created_at=row["created_at"],
             updated_at=row["updated_at"],

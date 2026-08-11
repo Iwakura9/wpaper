@@ -4,7 +4,7 @@ EditNoteModal {
 
 #edit_note_modal {
     width: 60;
-    height: 11;
+    height: 13;
     padding: 1 2 0 2;
     background: $surface;
     align: center middle;

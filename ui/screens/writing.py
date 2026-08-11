@@ -14,6 +14,7 @@ class WritingScreen(Screen):
     BINDINGS = [
         ("ctrl+s", "save_note", "Save"),
         ("ctrl+c", "quit_no_save", "Quit"), # temporário, depois tirar
+        ("escape", "quit_no_save", "Back"),
         ("f2", "open_menu", "Menu"),
     ]
 

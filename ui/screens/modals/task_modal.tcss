@@ -1,0 +1,78 @@
+TaskModal {
+  align: center middle;
+}
+
+#task_modal {
+    width: 60;
+    height: 24;
+    padding: 1 2 0 2;
+    background: $surface;
+    align: center middle;
+}
+
+#title {
+    text-style: bold;
+    margin-bottom: 1;
+    border: blank;
+}
+
+#importance_and_status_row {
+    width: 100%;
+    height: 1;
+    margin-bottom: 1;
+}
+
+#importance {
+    align: left middle;
+    width: 18;
+    padding-left: 1;
+    margin-left: 2;
+    border-left: solid indianred;
+}
+
+#status {
+    align: left middle;
+    width: 16;
+    padding-left: 1;
+    margin-left: 2;
+    border-left: solid lightslategrey;
+}
+
+#deadline {
+    margin-left: 2;
+    margin-right: 2;
+    padding-left: 1;
+    padding-right: 1;
+    margin-bottom: 1;
+    border-left: solid darkseagreen;
+}
+
+#tags {
+    margin-left: 2;
+    margin-right: 2;
+    padding-left: 1;
+    padding-right: 1;
+    margin-bottom: 1;
+    text-style: italic;
+    color: mediumslateblue;
+    border-left: solid mediumslateblue;
+}
+
+#description {
+    width: 100%;
+    height: 8;
+    border: blank;
+}
+
+#modal_buttons {
+    width: 100%;
+    margin-top: 1;
+}
+
+#cancel_button {
+    dock: left;
+}
+
+#save_button {
+    dock: right;
+}

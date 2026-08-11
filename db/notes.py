@@ -1,13 +1,8 @@
 import re
-from datetime import datetime
 from pathlib import Path
 
 from models.note import NewNoteData, Note, NoteStatus
-from db.connection import get_connection, DATA_DIR
-
-def now_timestamp() -> int:
-    # função pra retornar data e horário em segundos
-    return int(datetime.now().timestamp())
+from db.connection import get_connection, normalize_tags, now_timestamp, DATA_DIR
 
 def get_notes_dir() -> Path:
     notes_dir = DATA_DIR / "notes"
@@ -19,16 +14,6 @@ def _build_filename(note_id: int, title: str) -> str:
     safe_title = re.sub(r"\s+", "_", safe_title)
     safe_title = re.sub(r'[\\:*?"<>|\x00-\x1f]', "", safe_title)
     return f"{note_id}-{safe_title[:200]}.md"
-
-def _normalize_tags(tags: list[str] | None) -> list[str]:
-    if not tags:
-        return []
-    normalized = []
-    for tag in tags:
-        clean = tag.strip().lower()
-        if clean and clean not in normalized:
-            normalized.append(clean)
-    return normalized
 
 def create_note(data: NewNoteData) -> Note: # retorna ID
     now = now_timestamp()
@@ -64,7 +49,7 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
 
         con.execute("UPDATE notes SET file_path = ? WHERE id = ?", (file_path, note_id))
 
-        tags = _normalize_tags(data.tags)
+        tags = normalize_tags(data.tags)
         for tag in tags:
             con.execute(
                 "INSERT OR IGNORE INTO note_tags (note_id, tag) VALUES (?, ?)",

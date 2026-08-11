@@ -7,8 +7,12 @@ from textual.screen import Screen
 from textual.containers import Vertical
 
 from ui.screens.modals.new_note_modal import NewNoteModal
+from ui.screens.modals.task_modal import TaskModal
+from ui.screens.tasks import TasksScreen
 from ui.screens.writing import WritingScreen
 from models.note import Note
+from models.task import NewTaskData
+from db.tasks import create_task
 
 def load_random_logo() -> str:
     logos_path = Path("ui/logos.txt")
@@ -28,6 +32,7 @@ class HomeScreen(Screen):
     BINDINGS = [
         ("n", "new_note"),
         ("t", "new_task"),
+        ("T", "view_tasks"),
         ("d", "view_dashboard"),
         ("q", "quit"),
         ("/", "global_search"),
@@ -38,6 +43,7 @@ class HomeScreen(Screen):
             Static(load_random_logo(), id="logo"),
             Static("n - New note ", classes="shortcut"),
             Static("t - New task ", classes="shortcut"),
+            Static("T - Tasks    ", classes="shortcut"),
             Static("d - Dashboard", classes="shortcut"),
             Static("/ - Search   ", classes="shortcut"),
             Static("q - Quit     ", classes="shortcut"),
@@ -52,8 +58,17 @@ class HomeScreen(Screen):
             return
         self.app.push_screen(WritingScreen(note))
 
-    # def action_new_task(self) -> None:
-    #     self.app.push_screen(NewTaskModal())
+    def action_new_task(self) -> None:
+        self.app.push_screen(TaskModal(), self.on_task_created)
+
+    def on_task_created(self, data: NewTaskData | None) -> None:
+        if data is None:
+            return
+        create_task(data)
+        self.notify("Task created!")
+
+    def action_view_tasks(self) -> None:
+        self.app.push_screen(TasksScreen())
 
     # def action_view_dashboard(self) -> None:
     #     self.app.push_screen("dashboard")

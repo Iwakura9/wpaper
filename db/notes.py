@@ -1,4 +1,6 @@
+import re
 from datetime import datetime
+from pathlib import Path
 
 from models.note import NewNoteData, Note, NoteStatus
 from db.connection import get_connection
@@ -7,6 +9,17 @@ def now_timestamp() -> int:
     # função pra retornar data e horário em segundos
     return int(datetime.now().timestamp())
 
+def get_notes_dir() -> Path:
+    notes_dir = Path.home() / "Documents" / "wpaper" / "notes"
+    notes_dir.mkdir(parents=True, exist_ok=True)
+    return notes_dir
+
+def _build_filename(note_id: int, title: str) -> str:
+    safe_title = title.strip().replace("/", "-")
+    safe_title = re.sub(r"\s+", "_", safe_title)
+    safe_title = re.sub(r'[\\:*?"<>|\x00-\x1f]', "", safe_title)
+    return f"{note_id}-{safe_title[:200]}.md"
+
 def create_note(data: NewNoteData) -> Note: # retorna ID
     now = now_timestamp()
 
@@ -14,7 +27,7 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
         cursor = con.execute("""
             INSERT INTO notes (
                 title,
-                content,
+                file_path,
                 status,
                 created_at,
                 updated_at
@@ -35,31 +48,44 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
 
         if note_id is None:
             raise RuntimeError("Failed to create note")
-        else:
-            return Note(
-                id=note_id,
-                title=data.title,
-                status=data.status,
-                content="",
-                created_at=now,
-                updated_at=now,
-                tags=data.tags,
-            )
+
+        file_path = _build_filename(note_id, data.title)
+        (get_notes_dir() / file_path).write_text("", encoding="utf-8")
+
+        con.execute("UPDATE notes SET file_path = ? WHERE id = ?", (file_path, note_id))
+
+        return Note(
+            id=note_id,
+            title=data.title,
+            status=data.status,
+            file_path=file_path,
+            created_at=now,
+            updated_at=now,
+            tags=data.tags,
+        )
 
 
 def update_note_content(note_id: int, content: str) -> None:
     with get_connection() as con:
+        row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
+        (get_notes_dir() / row["file_path"]).write_text(content, encoding="utf-8")
+
         con.execute("""
             UPDATE notes
-            SET content = ?, updated_at = ?
+            SET updated_at = ?
             WHERE id = ?
             """,
             (
-                content,
                 now_timestamp(),
                 note_id,
             ),
         )
+
+def read_note_content(note: Note) -> str:
+    file_path = get_notes_dir() / note.file_path
+    if not file_path.exists():
+        return ""
+    return file_path.read_text(encoding="utf-8")
 
 def list_notes() -> list[Note]:
     with get_connection() as con:
@@ -67,7 +93,7 @@ def list_notes() -> list[Note]:
             SELECT
                 id,
                 title,
-                content,
+                file_path,
                 status,
                 created_at,
                 updated_at
@@ -79,7 +105,7 @@ def list_notes() -> list[Note]:
         Note(
             id=row["id"],
             title=row["title"],
-            content=row["content"],
+            file_path=row["file_path"],
             status=NoteStatus(row["status"]),
             created_at=row["created_at"],
             updated_at=row["updated_at"],

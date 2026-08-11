@@ -5,7 +5,7 @@ from textual.widgets import Footer, Static, TextArea
 from datetime import datetime
 
 from models.note import Note
-from db.notes import update_note_content
+from db.notes import read_note_content, update_note_content
 
 class WritingScreen(Screen):
     CSS_PATH = "writing.tcss"
@@ -28,7 +28,7 @@ class WritingScreen(Screen):
                 id="header"
             ),
             TextArea(
-                text="",
+                text=read_note_content(self.note),
                 language="markdown",
                 soft_wrap=True,
                 show_line_numbers=True,
@@ -47,7 +47,6 @@ class WritingScreen(Screen):
         body = self.query_one("#note_body", TextArea).text
         # e manda pra funçao de atualizar o conteudo, que pede id e o texto
         update_note_content(self.note.id, body)
-        self.note.content = body
 
         self.notify("Note saved!")
 

@@ -1,4 +1,4 @@
 .venv/
-ignora/
+local/
 __pycache__/
 *.sqlite

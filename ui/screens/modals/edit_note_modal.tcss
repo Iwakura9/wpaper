@@ -1,0 +1,39 @@
+EditNoteModal {
+  align: center middle;
+}
+
+#edit_note_modal {
+    width: 60;
+    height: 13;
+    padding: 1 2 0 2;
+    background: $surface;
+    align: center middle;
+}
+
+#title {
+    text-style: bold;
+    margin-bottom: 1;
+    border: blank;
+}
+
+#status {
+    align: left middle;
+    width: 14;
+    padding-left: 1;
+    margin-left: 2;
+    margin-bottom: 1;
+    border-left: solid lightslategrey;
+}
+
+#modal_buttons {
+    width: 100%;
+    margin-top: 2;
+}
+
+#cancel_button {
+    dock: left;
+}
+
+#save_button {
+    dock: right;
+}

@@ -1,8 +1,8 @@
 import sqlite3
 from pathlib import Path
 
-# Caminho temporário
-DB_PATH = Path("db/wpaper.sqlite")
+DATA_DIR = Path.home() / "Documents" / "wpaper"
+DB_PATH = DATA_DIR / "wpaper.sqlite"
 
 
 def get_connection() -> sqlite3.Connection:

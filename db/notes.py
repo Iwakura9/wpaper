@@ -3,14 +3,14 @@ from datetime import datetime
 from pathlib import Path
 
 from models.note import NewNoteData, Note, NoteStatus
-from db.connection import get_connection
+from db.connection import get_connection, DATA_DIR
 
 def now_timestamp() -> int:
     # função pra retornar data e horário em segundos
     return int(datetime.now().timestamp())
 
 def get_notes_dir() -> Path:
-    notes_dir = Path.home() / "Documents" / "wpaper" / "notes"
+    notes_dir = DATA_DIR / "notes"
     notes_dir.mkdir(parents=True, exist_ok=True)
     return notes_dir
 
@@ -19,6 +19,16 @@ def _build_filename(note_id: int, title: str) -> str:
     safe_title = re.sub(r"\s+", "_", safe_title)
     safe_title = re.sub(r'[\\:*?"<>|\x00-\x1f]', "", safe_title)
     return f"{note_id}-{safe_title[:200]}.md"
+
+def _normalize_tags(tags: list[str] | None) -> list[str]:
+    if not tags:
+        return []
+    normalized = []
+    for tag in tags:
+        clean = tag.strip().lower()
+        if clean and clean not in normalized:
+            normalized.append(clean)
+    return normalized
 
 def create_note(data: NewNoteData) -> Note: # retorna ID
     now = now_timestamp()
@@ -54,6 +64,13 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
 
         con.execute("UPDATE notes SET file_path = ? WHERE id = ?", (file_path, note_id))
 
+        tags = _normalize_tags(data.tags)
+        for tag in tags:
+            con.execute(
+                "INSERT OR IGNORE INTO note_tags (note_id, tag) VALUES (?, ?)",
+                (note_id, tag),
+            )
+
         return Note(
             id=note_id,
             title=data.title,
@@ -61,8 +78,28 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
             file_path=file_path,
             created_at=now,
             updated_at=now,
-            tags=data.tags,
+            tags=tags,
         )
+
+
+def update_note_metadata(note_id: int, title: str, status: NoteStatus) -> str:
+    with get_connection() as con:
+        row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
+
+        new_file_path = _build_filename(note_id, title)
+        if new_file_path != row["file_path"]:
+            (get_notes_dir() / row["file_path"]).rename(get_notes_dir() / new_file_path)
+
+        con.execute(
+            """
+            UPDATE notes
+            SET title = ?, status = ?, file_path = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (title, status.value, new_file_path, now_timestamp(), note_id),
+        )
+
+        return new_file_path
 
 
 def update_note_content(note_id: int, content: str) -> None:
@@ -101,6 +138,17 @@ def list_notes() -> list[Note]:
             ORDER BY updated_at DESC, id DESC
         """).fetchall()
 
+        note_ids = [row["id"] for row in rows]
+        tags_by_note: dict[int, list[str]] = {}
+        if note_ids:
+            placeholders = ",".join("?" * len(note_ids))
+            tag_rows = con.execute(
+                f"SELECT note_id, tag FROM note_tags WHERE note_id IN ({placeholders}) ORDER BY tag",
+                note_ids,
+            ).fetchall()
+            for tag_row in tag_rows:
+                tags_by_note.setdefault(tag_row["note_id"], []).append(tag_row["tag"])
+
     return [
         Note(
             id=row["id"],
@@ -109,7 +157,7 @@ def list_notes() -> list[Note]:
             status=NoteStatus(row["status"]),
             created_at=row["created_at"],
             updated_at=row["updated_at"],
-            tags=None,
+            tags=tags_by_note.get(row["id"], []),
         )
         for row in rows
     ]

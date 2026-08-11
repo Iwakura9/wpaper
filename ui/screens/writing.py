@@ -4,8 +4,9 @@ from textual.app import ComposeResult
 from textual.widgets import Footer, Static, TextArea
 from datetime import datetime
 
-from models.note import Note
-from db.notes import read_note_content, update_note_content
+from models.note import Note, NoteStatus
+from db.notes import read_note_content, update_note_content, update_note_metadata
+from ui.screens.modals.edit_note_modal import EditNoteModal
 
 class WritingScreen(Screen):
     CSS_PATH = "writing.tcss"
@@ -13,7 +14,8 @@ class WritingScreen(Screen):
     BINDINGS = [
         ("ctrl+s", "save_note", "Save"),
         ("ctrl+c", "quit_no_save", "Quit"), # temporário, depois tirar
-        # ("escape", "open_menu", ) --> abrir um menu com informações/metadados
+        ("escape", "quit_no_save", "Back"),
+        ("f2", "open_menu", "Menu"),
     ]
 
     def __init__(self, note: Note):
@@ -54,8 +56,19 @@ class WritingScreen(Screen):
         # self.notify("Save is not implemented yet", severity="warning")
 
     def action_open_menu(self) -> None:
-        # menuzinho pra poder ver/alterar os metadados, salvar e sair
-        pass
+        self.app.push_screen(EditNoteModal(self.note), self.on_note_edited)
+
+    def on_note_edited(self, result: tuple[str, NoteStatus] | None) -> None:
+        if result is None:
+            return
+
+        title, status = result
+        new_file_path = update_note_metadata(self.note.id, title, status)
+        self.note.title = title
+        self.note.status = status
+        self.note.file_path = new_file_path
+
+        self.query_one("#note_title", Static).update(title)
 
     def action_quit_no_save(self) -> None:
         self.app.pop_screen()

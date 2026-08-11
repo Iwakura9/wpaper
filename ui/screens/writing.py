@@ -14,7 +14,7 @@ class WritingScreen(Screen):
     BINDINGS = [
         ("ctrl+s", "save_note", "Save"),
         ("ctrl+c", "quit_no_save", "Quit"), # temporário, depois tirar
-        ("escape", "open_menu", "Menu"),
+        ("f2", "open_menu", "Menu"),
     ]
 
     def __init__(self, note: Note):

@@ -22,7 +22,7 @@ class Note:
     status: NoteStatus
     created_at: int
     updated_at: int
-    content: str = ""
+    file_path: str = ""
     tags: list[str] | None =None
 
 # fluxo:

@@ -13,3 +13,11 @@ def initialize_db() -> None:
             updated_at INTEGER NOT NULL
            )
         """)  # TODO: Colocar o linked_task_id
+
+        con.execute("""
+           CREATE TABLE IF NOT EXISTS note_tags (
+            note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+            tag TEXT NOT NULL,
+            PRIMARY KEY (note_id, tag)
+           )
+        """)

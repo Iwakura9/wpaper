@@ -7,6 +7,7 @@ from datetime import datetime
 from models.note import NewNoteData, Note
 from db.connection import normalize_tags
 from db.notes import read_note_content, update_note_content, update_note_metadata
+from ui.external_editor import open_note_in_editor
 from ui.screens.modals.edit_note_modal import EditNoteModal
 
 class WritingScreen(Screen):
@@ -17,6 +18,7 @@ class WritingScreen(Screen):
         ("ctrl+c", "quit_no_save", "Quit"), # temporário, depois tirar
         ("escape", "quit_no_save", "Back"),
         ("f2", "open_menu", "Menu"),
+        ("f3", "edit_external", "Editor"),
     ]
 
     def __init__(self, note: Note):
@@ -55,6 +57,12 @@ class WritingScreen(Screen):
 
         # Futuramente salvar os metadados no SQLite e depois excluir essa bosta
         # self.notify("Save is not implemented yet", severity="warning")
+
+    def action_edit_external(self) -> None:
+        body = self.query_one("#note_body", TextArea)
+        update_note_content(self.note.id, body.text)
+        if open_note_in_editor(self.app, self.note):
+            body.text = read_note_content(self.note)
 
     def action_open_menu(self) -> None:
         self.app.push_screen(EditNoteModal(self.note), self.on_note_edited)

@@ -3,7 +3,10 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Select
 
-from models.note import Note, NoteStatus
+from models.note import NewNoteData, Note, NoteStatus
+from db.notes import list_note_tags
+from db.tasks import list_tasks
+from ui.screens.modals.tag_suggester import TagSuggester
 
 
 class EditNoteModal(ModalScreen):
@@ -18,6 +21,7 @@ class EditNoteModal(ModalScreen):
         self.note = note
 
     def compose(self) -> ComposeResult:
+        linked = self.note.linked_task_id
         yield Vertical(
             Input(value=self.note.title, placeholder="Title", id="title"),
             Select(
@@ -31,6 +35,22 @@ class EditNoteModal(ModalScreen):
                 allow_blank=False,
                 compact=True,
                 id="status",
+            ),
+            Select(
+                [(task.title, task.id) for task in list_tasks()],
+                # a deleted task nulls the link (ON DELETE SET NULL), so any id here still exists
+                value=Select.NULL if linked is None else linked,
+                prompt="No task",
+                allow_blank=True,
+                compact=True,
+                id="task",
+            ),
+            Input(
+                value=", ".join(self.note.tags or []),
+                placeholder="Tags, separated by commas",
+                suggester=TagSuggester(list_note_tags()),
+                compact=True,
+                id="tags",
             ),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
@@ -63,4 +83,16 @@ class EditNoteModal(ModalScreen):
         if not isinstance(status, NoteStatus):
             status = NoteStatus.WRITING
 
-        self.dismiss((title, status))
+        linked_task_id = self.query_one("#task", Select).value
+        if not isinstance(linked_task_id, int):  # Select.NULL
+            linked_task_id = None
+
+        self.dismiss(
+            NewNoteData(
+                title=title,
+                status=status,
+                # update_note_metadata normalizes (strip, lower, dedupe) via normalize_tags
+                tags=self.query_one("#tags", Input).value.split(","),
+                linked_task_id=linked_task_id,
+            )
+        )

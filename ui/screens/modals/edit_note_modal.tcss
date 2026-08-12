@@ -4,7 +4,7 @@ EditNoteModal {
 
 #edit_note_modal {
     width: 60;
-    height: 13;
+    height: 15;
     padding: 1 2 0 2;
     background: $surface;
     align: center middle;
@@ -23,6 +23,25 @@ EditNoteModal {
     margin-left: 2;
     margin-bottom: 1;
     border-left: solid lightslategrey;
+}
+
+#task {
+    align: left middle;
+    width: 30;
+    padding-left: 1;
+    margin-left: 2;
+    margin-bottom: 1;
+    border-left: solid darkseagreen;
+}
+
+#tags {
+    margin-left: 2;
+    margin-right: 2;
+    padding-left: 1;
+    padding-right: 1;
+    text-style: italic;
+    color: mediumslateblue;
+    border-left: solid mediumslateblue;
 }
 
 #modal_buttons {

@@ -3,7 +3,7 @@ from datetime import datetime
 from models.task import NewTaskData, Task, TaskStatus
 from db.connection import get_connection, normalize_tags, now_timestamp
 
-DEADLINE_FORMAT = "%Y-%m-%d"
+DEADLINE_FORMAT = "%d-%m-%Y"
 
 def parse_deadline(text: str) -> int | None:
     text = text.strip()
@@ -100,6 +100,11 @@ def update_task(task_id: int, data: NewTaskData) -> None:
 def delete_task(task_id: int) -> None:
     with get_connection() as con:
         con.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+
+def list_task_tags() -> list[str]:
+    with get_connection() as con:
+        rows = con.execute("SELECT DISTINCT tag FROM task_tags ORDER BY tag").fetchall()
+    return [row["tag"] for row in rows]
 
 def list_tasks() -> list[Task]:
     with get_connection() as con:

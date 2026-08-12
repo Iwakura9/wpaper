@@ -15,6 +15,14 @@ def _build_filename(note_id: int, title: str) -> str:
     safe_title = re.sub(r'[\\:*?"<>|\x00-\x1f]', "", safe_title)
     return f"{note_id}-{safe_title[:200]}.md"
 
+def _replace_tags(con, note_id: int, tags: list[str]) -> None:
+    con.execute("DELETE FROM note_tags WHERE note_id = ?", (note_id,))
+    for tag in tags:
+        con.execute(
+            "INSERT OR IGNORE INTO note_tags (note_id, tag) VALUES (?, ?)",
+            (note_id, tag),
+        )
+
 def create_note(data: NewNoteData) -> Note: # retorna ID
     now = now_timestamp()
 
@@ -25,9 +33,10 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
                 file_path,
                 status,
                 created_at,
-                updated_at
+                updated_at,
+                linked_task_id
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         """,
             (
                 data.title,
@@ -35,7 +44,7 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
                 data.status.value,
                 now,
                 now,
-                # TODO: colocar linked_task_id
+                data.linked_task_id,
             ),
         )
 
@@ -50,11 +59,7 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
         con.execute("UPDATE notes SET file_path = ? WHERE id = ?", (file_path, note_id))
 
         tags = normalize_tags(data.tags)
-        for tag in tags:
-            con.execute(
-                "INSERT OR IGNORE INTO note_tags (note_id, tag) VALUES (?, ?)",
-                (note_id, tag),
-            )
+        _replace_tags(con, note_id, tags)
 
         return Note(
             id=note_id,
@@ -64,25 +69,35 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
             created_at=now,
             updated_at=now,
             tags=tags,
+            linked_task_id=data.linked_task_id,
         )
 
 
-def update_note_metadata(note_id: int, title: str, status: NoteStatus) -> str:
+def update_note_metadata(note_id: int, data: NewNoteData) -> str:
     with get_connection() as con:
         row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
 
-        new_file_path = _build_filename(note_id, title)
+        new_file_path = _build_filename(note_id, data.title)
         if new_file_path != row["file_path"]:
             (get_notes_dir() / row["file_path"]).rename(get_notes_dir() / new_file_path)
 
         con.execute(
             """
             UPDATE notes
-            SET title = ?, status = ?, file_path = ?, updated_at = ?
+            SET title = ?, status = ?, file_path = ?, updated_at = ?, linked_task_id = ?
             WHERE id = ?
             """,
-            (title, status.value, new_file_path, now_timestamp(), note_id),
+            (
+                data.title,
+                data.status.value,
+                new_file_path,
+                now_timestamp(),
+                data.linked_task_id,
+                note_id,
+            ),
         )
+
+        _replace_tags(con, note_id, normalize_tags(data.tags))
 
         return new_file_path
 
@@ -109,6 +124,19 @@ def read_note_content(note: Note) -> str:
         return ""
     return file_path.read_text(encoding="utf-8")
 
+def delete_note(note_id: int) -> None:
+    with get_connection() as con:
+        row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
+        if row is not None:
+            (get_notes_dir() / row["file_path"]).unlink(missing_ok=True)
+
+        con.execute("DELETE FROM notes WHERE id = ?", (note_id,))
+
+def list_note_tags() -> list[str]:
+    with get_connection() as con:
+        rows = con.execute("SELECT DISTINCT tag FROM note_tags ORDER BY tag").fetchall()
+    return [row["tag"] for row in rows]
+
 def list_notes() -> list[Note]:
     with get_connection() as con:
         rows = con.execute("""
@@ -118,7 +146,8 @@ def list_notes() -> list[Note]:
                 file_path,
                 status,
                 created_at,
-                updated_at
+                updated_at,
+                linked_task_id
             FROM notes
             ORDER BY updated_at DESC, id DESC
         """).fetchall()
@@ -143,6 +172,7 @@ def list_notes() -> list[Note]:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             tags=tags_by_note.get(row["id"], []),
+            linked_task_id=row["linked_task_id"],
         )
         for row in rows
     ]

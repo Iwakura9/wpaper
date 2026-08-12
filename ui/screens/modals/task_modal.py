@@ -1,10 +1,12 @@
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Select, TextArea
+from textual.widgets import Button, Input, Select, Static, TextArea
 
 from models.task import NewTaskData, Task, TaskStatus
-from db.tasks import format_deadline, parse_deadline
+from db.notes import list_notes
+from db.tasks import format_deadline, list_task_tags, parse_deadline
+from ui.screens.modals.tag_suggester import TagSuggester
 
 IMPORTANCE_OPTIONS = [
     ("1 - highest", 1),
@@ -35,6 +37,15 @@ class TaskModal(ModalScreen):
         super().__init__()
         self.edited_task = task
 
+    def linked_notes_line(self) -> str:
+        if self.edited_task is None:
+            return ""
+        titles = [
+            note.title for note in list_notes()
+            if note.linked_task_id == self.edited_task.id
+        ]
+        return f"Linked notes: {', '.join(titles)}" if titles else ""
+
     def compose(self) -> ComposeResult:
         task = self.edited_task
 
@@ -63,13 +74,14 @@ class TaskModal(ModalScreen):
             ),
             Input(
                 value=format_deadline(task.deadline) if task else "",
-                placeholder="Deadline (YYYY-MM-DD)",
+                placeholder="Deadline (DD-MM-YYYY)",
                 compact=True,
                 id="deadline",
             ),
             Input(
                 value=", ".join(task.tags or []) if task else "",
                 placeholder="Tags, separated by commas",
+                suggester=TagSuggester(list_task_tags()),
                 compact=True,
                 id="tags",
             ),
@@ -79,6 +91,8 @@ class TaskModal(ModalScreen):
                 placeholder="Description",
                 id="description",
             ),
+            # read-only: the link lives on the note, so it is edited from the note modals
+            Static(self.linked_notes_line(), id="linked_notes"),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
                 Button("Save" if task else "Create", variant="primary", id="save_button"),
@@ -109,7 +123,7 @@ class TaskModal(ModalScreen):
         try:
             deadline = parse_deadline(self.query_one("#deadline", Input).value)
         except ValueError:
-            self.notify("Deadline must be YYYY-MM-DD", severity="error")
+            self.notify("Deadline must be DD-MM-YYYY", severity="error")
             return
 
         importance = self.query_one("#importance", Select).value
@@ -120,13 +134,6 @@ class TaskModal(ModalScreen):
         if not isinstance(status, TaskStatus):
             status = TaskStatus.PENDING
 
-        tags_input = self.query_one("#tags", Input).value.strip()
-        tags = []
-        for tag in tags_input.split(","):
-            if tag.strip():
-                clean_tag = tag.strip().lower()
-                tags.append(clean_tag)
-
         self.dismiss(
             NewTaskData(
                 title=title,
@@ -134,6 +141,7 @@ class TaskModal(ModalScreen):
                 status=status,
                 description=self.query_one("#description", TextArea).text,
                 deadline=deadline,
-                tags=tags,
+                # create_task/update_task normalize (strip, lower, dedupe) via normalize_tags
+                tags=self.query_one("#tags", Input).value.split(","),
             )
         )

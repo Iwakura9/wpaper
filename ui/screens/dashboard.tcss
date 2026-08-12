@@ -28,7 +28,8 @@
 #note_board.grid_view {
     layout: grid;
     grid-size: 4;
-    grid-rows: 3;
+    /* 4 content lines (title, meta, tags, linked task) + the card's bottom margin */
+    grid-rows: 5;
 }
 
 #note_board.kanban_view {

@@ -6,7 +6,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
 
 from models.note import NoteStatus, NewNoteData
-from db.notes import create_note
+from db.notes import create_note, list_note_tags
+from db.tasks import list_tasks
+from ui.screens.modals.tag_suggester import TagSuggester
 
 
 class NewNoteModal(ModalScreen):
@@ -36,7 +38,19 @@ class NewNoteModal(ModalScreen):
                 Label(datetime.now().strftime("%d %b, %Y"), id="date"),
                 id="date_and_status_row",
             ),
-            Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
+            Select(
+                [(task.title, task.id) for task in list_tasks()],
+                prompt="No task",
+                allow_blank=True,
+                compact=True,
+                id="task",
+            ),
+            Input(
+                placeholder="Tags, separated by commas",
+                suggester=TagSuggester(list_note_tags()),
+                compact=True,
+                id="tags",
+            ),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
                 Button("Create", variant="primary", id="create_note_button"),
@@ -71,19 +85,16 @@ class NewNoteModal(ModalScreen):
         if not isinstance(status, NoteStatus):
             status = NoteStatus.WRITING
 
-        tags_input = self.query_one("#tags", Input).value.strip()
-        tags = []
-        for tag in tags_input.split(","):
-            if tag.strip():
-                clean_tag = tag.strip().lower()
-                tags.append(clean_tag)
-
-        # related_task_id = alguma coisa
+        linked_task_id = self.query_one("#task", Select).value
+        if not isinstance(linked_task_id, int):  # Select.NULL
+            linked_task_id = None
 
         note_data = NewNoteData(
             title=title,
             status=status,
-            tags=tags,
+            # create_note normalizes (strip, lower, dedupe) via normalize_tags
+            tags=self.query_one("#tags", Input).value.split(","),
+            linked_task_id=linked_task_id,
         )
 
         note = create_note(note_data)

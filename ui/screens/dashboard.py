@@ -1,12 +1,13 @@
 from datetime import datetime
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Static
 
-from db.notes import list_notes
+from db.notes import delete_note, list_notes
 from db.stats import dashboard_stats
 from db.tasks import create_task, delete_task, format_deadline, list_tasks, update_task
 from models.note import Note, NoteStatus
@@ -31,23 +32,36 @@ def format_status(status: TaskStatus) -> str:
 class NoteCard(Static):
     can_focus = True
 
-    BINDINGS = [("enter", "open", "Open")]
+    BINDINGS = [
+        ("enter", "open", "Open"),
+        ("d", "delete", "Delete note"),
+    ]
 
     class Opened(Message):
         def __init__(self, note: Note) -> None:
             self.note = note
             super().__init__()
 
-    def __init__(self, note: Note):
+    class DeleteRequested(Message):
+        def __init__(self, note: Note) -> None:
+            self.note = note
+            super().__init__()
+
+    def __init__(self, note: Note, task_title: str | None = None):
         updated = datetime.fromtimestamp(note.updated_at).strftime("%d %b, %Y")
         lines = [note.title, f"{note.status.value} · {updated}"]
         if note.tags:
             lines.append(", ".join(note.tags))
+        if task_title:
+            lines.append(f"→ {task_title}")
         super().__init__("\n".join(lines), classes="note_card")
         self.note = note
 
     def action_open(self) -> None:
         self.post_message(self.Opened(self.note))
+
+    def action_delete(self) -> None:
+        self.post_message(self.DeleteRequested(self.note))
 
 
 class DashboardScreen(Screen):
@@ -59,6 +73,12 @@ class DashboardScreen(Screen):
         ("n", "new_note", "New note"),
         ("t", "new_task", "New task"),
         ("d", "delete_task", "Delete task"),
+        # The DataTable consumes the arrows itself, so these only ever fire on a focused
+        # NoteCard, which is a Static and lets them through to the screen.
+        Binding("up", "focus_card(0, -1)", show=False),
+        Binding("down", "focus_card(0, 1)", show=False),
+        Binding("left", "focus_card(-1, 0)", show=False),
+        Binding("right", "focus_card(1, 0)", show=False),
     ]
 
     def __init__(self):
@@ -129,21 +149,76 @@ class DashboardScreen(Screen):
         board.set_classes("grid_view" if self.notes_view == "grid" else "kanban_view")
 
         notes = list_notes()
+        task_titles = {task.id: task.title for task in list_tasks()}
+
+        def card(note: Note) -> NoteCard:
+            return NoteCard(note, task_titles.get(note.linked_task_id))
+
         if self.notes_view == "grid":
-            await board.mount_all(NoteCard(note) for note in notes)
+            await board.mount_all(card(note) for note in notes)
         else:
             for status in NoteStatus:
                 column_notes = [note for note in notes if note.status is status]
                 column = Vertical(
                     Static(status.value.title(), classes="column_header"),
-                    *[NoteCard(note) for note in column_notes],
+                    *[card(note) for note in column_notes],
                     classes="column",
                 )
                 await board.mount(column)
 
-    # ponytail: Tab between cards, arrow-key nav if it's missed
+    def note_card_cells(self) -> dict[tuple[int, int], NoteCard]:
+        """Maps every note card to its (column, row) on the board."""
+        board = self.query_one("#note_board", Vertical)
+        if self.notes_view == "grid":
+            # Cards are children of the grid in row-major order; the column count is the
+            # tcss grid-size, read back so there is no constant to keep in sync.
+            columns = board.styles.grid_size_columns or 4
+            return {
+                (index % columns, index // columns): card
+                for index, card in enumerate(board.query(NoteCard))
+            }
+        return {
+            (column_index, row): card
+            for column_index, column in enumerate(board.query(".column"))
+            for row, card in enumerate(column.query(NoteCard))
+        }
+
+    def action_focus_card(self, dcol: int, drow: int) -> None:
+        card = self.focused
+        if not isinstance(card, NoteCard):
+            return
+
+        cells = self.note_card_cells()
+        origin = next((pos for pos, other in cells.items() if other is card), None)
+        if origin is None:
+            return
+        col, row = origin
+
+        if drow:
+            target = cells.get((col, row + drow))
+        else:
+            # Columns are ragged, so a sideways move lands on the nearest card there.
+            column = [pos for pos in cells if pos[0] == col + dcol]
+            target = cells[min(column, key=lambda pos: abs(pos[1] - row))] if column else None
+
+        if target is not None:
+            target.focus()
+
     def on_note_card_opened(self, message: NoteCard.Opened) -> None:
         self.app.push_screen(WritingScreen(message.note))
+
+    def on_note_card_delete_requested(self, message: NoteCard.DeleteRequested) -> None:
+        note = message.note
+        self.app.push_screen(
+            ConfirmModal(f'Delete "{note.title}"?'),
+            lambda confirmed: self.on_note_delete_confirmed(note.id, confirmed),
+        )
+
+    def on_note_delete_confirmed(self, note_id: int, confirmed: bool | None) -> None:
+        if not confirmed:
+            return
+        delete_note(note_id)
+        self.call_next(self.reload)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         task = self.tasks_by_row.get(event.row_key.value)
@@ -182,7 +257,8 @@ class DashboardScreen(Screen):
         self.notify("Task created!")
         self.call_next(self.reload)
 
-    # ponytail: always acts on the tasks table's cursor row, even with focus on the note board
+    # NoteCard owns its own "d" binding (deletes that note) and shadows this one while
+    # focused; everywhere else "d" falls through to here and deletes the table's cursor row.
     def action_delete_task(self) -> None:
         table = self.query_one("#tasks", DataTable)
         if table.row_count == 0:

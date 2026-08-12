@@ -13,6 +13,7 @@ from db.tasks import create_task, delete_task, format_deadline, list_tasks, upda
 from models.note import Note, NoteStatus
 from models.task import NewTaskData, Task, TaskStatus
 from ui.screens.modals.confirm_modal import ConfirmModal
+from ui.external_editor import open_note_in_editor
 from ui.screens.modals.new_note_modal import NewNoteModal
 from ui.screens.modals.task_modal import TaskModal
 from ui.screens.writing import WritingScreen
@@ -35,6 +36,7 @@ class NoteCard(Static):
     BINDINGS = [
         ("enter", "open", "Open"),
         ("d", "delete", "Delete note"),
+        ("e", "edit_external", "Edit in editor"),
     ]
 
     class Opened(Message):
@@ -43,6 +45,11 @@ class NoteCard(Static):
             super().__init__()
 
     class DeleteRequested(Message):
+        def __init__(self, note: Note) -> None:
+            self.note = note
+            super().__init__()
+
+    class EditExternalRequested(Message):
         def __init__(self, note: Note) -> None:
             self.note = note
             super().__init__()
@@ -62,6 +69,9 @@ class NoteCard(Static):
 
     def action_delete(self) -> None:
         self.post_message(self.DeleteRequested(self.note))
+
+    def action_edit_external(self) -> None:
+        self.post_message(self.EditExternalRequested(self.note))
 
 
 class DashboardScreen(Screen):
@@ -219,6 +229,10 @@ class DashboardScreen(Screen):
             return
         delete_note(note_id)
         self.call_next(self.reload)
+
+    def on_note_card_edit_external_requested(self, message: NoteCard.EditExternalRequested) -> None:
+        if open_note_in_editor(self.app, message.note):
+            self.call_next(self.reload)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         task = self.tasks_by_row.get(event.row_key.value)

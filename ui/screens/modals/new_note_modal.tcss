@@ -4,7 +4,7 @@ NewNoteModal {
 
 #new_note_modal {
     width: 60;
-    height: 17;
+    height: 19;
     padding: 1 2 0 2;
     background: $surface;
     align: center middle;

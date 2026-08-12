@@ -4,7 +4,7 @@ TaskModal {
 
 #task_modal {
     width: 60;
-    height: 26;
+    height: 23;
     padding: 1 2 0 2;
     background: $surface;
     align: center middle;
@@ -60,7 +60,7 @@ TaskModal {
 
 #description {
     width: 100%;
-    height: 8;
+    height: 5;
     border: blank;
 }
 

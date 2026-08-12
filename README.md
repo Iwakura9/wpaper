@@ -15,13 +15,27 @@ The goal is to feel closer to tools like Neovim, being fast, keyboard-driven, mi
 
 ## Features
 
-* Create and manage notes
-* Register and organize tasks
-* Dashboard with info and statistics
-* Navigate using keyboard shortcuts
-* Supports mouse too
+* Create, write and manage notes
+* Register and organize tasks (importance, deadline, status)
+* Link notes to tasks
+* Tags with autocomplete suggestions
+* Dashboard with stats, open tasks and a note board (grid/kanban)
+* Keyboard-driven navigation
 * Lightweight TUI interface
-* ...
 
 ## How to install
-...
+
+```bash
+git clone https://github.com/Iwakura9/wpaper.git
+cd wpaper
+python -m venv .venv
+source .venv/bin/activate
+pip install textual rich
+```
+
+## How to run
+
+```bash
+source .venv/bin/activate
+python wpaper.py
+```

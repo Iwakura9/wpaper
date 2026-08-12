@@ -64,8 +64,8 @@ class HomeScreen(Screen):
         create_task(data)
         self.notify("Task created!")
 
-    # def action_view_dashboard(self) -> None:
-    #     self.app.push_screen("dashboard")
+    def action_view_dashboard(self) -> None:
+        self.app.push_screen("dashboard")
 
     def action_quit(self) -> None:
         self.app.exit()

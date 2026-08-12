@@ -1,9 +1,10 @@
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Select, TextArea
+from textual.widgets import Button, Input, Select, Static, TextArea
 
 from models.task import NewTaskData, Task, TaskStatus
+from db.notes import list_notes
 from db.tasks import format_deadline, parse_deadline
 
 IMPORTANCE_OPTIONS = [
@@ -34,6 +35,15 @@ class TaskModal(ModalScreen):
     def __init__(self, task: Task | None = None):
         super().__init__()
         self.edited_task = task
+
+    def linked_notes_line(self) -> str:
+        if self.edited_task is None:
+            return ""
+        titles = [
+            note.title for note in list_notes()
+            if note.linked_task_id == self.edited_task.id
+        ]
+        return f"Linked notes: {', '.join(titles)}" if titles else ""
 
     def compose(self) -> ComposeResult:
         task = self.edited_task
@@ -79,6 +89,8 @@ class TaskModal(ModalScreen):
                 placeholder="Description",
                 id="description",
             ),
+            # read-only: the link lives on the note, so it is edited from the note modals
+            Static(self.linked_notes_line(), id="linked_notes"),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
                 Button("Save" if task else "Create", variant="primary", id="save_button"),

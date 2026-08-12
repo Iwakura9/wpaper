@@ -4,7 +4,7 @@ NewNoteModal {
 
 #new_note_modal {
     width: 60;
-    height: 15;
+    height: 17;
     padding: 1 2 0 2;
     background: $surface;
     align: center middle;
@@ -37,6 +37,16 @@ NewNoteModal {
     border-left: solid lightslategrey;
 }
 
+
+#task {
+    align: left middle;
+    width: 30;
+    padding-left: 1;
+    margin-left: 2;
+    margin-top: 1;
+    margin-bottom: 1;
+    border-left: solid darkseagreen;
+}
 
 #tags {
     margin-left: 2;

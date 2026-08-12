@@ -4,7 +4,8 @@ from textual.app import ComposeResult
 from textual.widgets import Footer, Static, TextArea
 from datetime import datetime
 
-from models.note import Note, NoteStatus
+from models.note import NewNoteData, Note
+from db.connection import normalize_tags
 from db.notes import read_note_content, update_note_content, update_note_metadata
 from ui.screens.modals.edit_note_modal import EditNoteModal
 
@@ -58,17 +59,17 @@ class WritingScreen(Screen):
     def action_open_menu(self) -> None:
         self.app.push_screen(EditNoteModal(self.note), self.on_note_edited)
 
-    def on_note_edited(self, result: tuple[str, NoteStatus] | None) -> None:
+    def on_note_edited(self, result: NewNoteData | None) -> None:
         if result is None:
             return
 
-        title, status = result
-        new_file_path = update_note_metadata(self.note.id, title, status)
-        self.note.title = title
-        self.note.status = status
-        self.note.file_path = new_file_path
+        self.note.file_path = update_note_metadata(self.note.id, result)
+        self.note.title = result.title
+        self.note.status = result.status
+        self.note.tags = normalize_tags(result.tags)
+        self.note.linked_task_id = result.linked_task_id
 
-        self.query_one("#note_title", Static).update(title)
+        self.query_one("#note_title", Static).update(result.title)
 
     def action_quit_no_save(self) -> None:
         self.app.pop_screen()

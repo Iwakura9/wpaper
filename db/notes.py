@@ -132,6 +132,11 @@ def delete_note(note_id: int) -> None:
 
         con.execute("DELETE FROM notes WHERE id = ?", (note_id,))
 
+def list_note_tags() -> list[str]:
+    with get_connection() as con:
+        rows = con.execute("SELECT DISTINCT tag FROM note_tags ORDER BY tag").fetchall()
+    return [row["tag"] for row in rows]
+
 def list_notes() -> list[Note]:
     with get_connection() as con:
         rows = con.execute("""

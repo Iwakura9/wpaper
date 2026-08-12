@@ -6,8 +6,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
 
 from models.note import NoteStatus, NewNoteData
-from db.notes import create_note
+from db.notes import create_note, list_note_tags
 from db.tasks import list_tasks
+from ui.screens.modals.tag_suggester import TagSuggester
 
 
 class NewNoteModal(ModalScreen):
@@ -44,7 +45,12 @@ class NewNoteModal(ModalScreen):
                 compact=True,
                 id="task",
             ),
-            Input(placeholder="Tags, separated by commas", compact=True, id="tags"),
+            Input(
+                placeholder="Tags, separated by commas",
+                suggester=TagSuggester(list_note_tags()),
+                compact=True,
+                id="tags",
+            ),
             Horizontal(
                 Button("Cancel", id="cancel_button"),
                 Button("Create", variant="primary", id="create_note_button"),

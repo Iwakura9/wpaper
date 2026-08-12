@@ -5,7 +5,8 @@ from textual.widgets import Button, Input, Select, Static, TextArea
 
 from models.task import NewTaskData, Task, TaskStatus
 from db.notes import list_notes
-from db.tasks import format_deadline, parse_deadline
+from db.tasks import format_deadline, list_task_tags, parse_deadline
+from ui.screens.modals.tag_suggester import TagSuggester
 
 IMPORTANCE_OPTIONS = [
     ("1 - highest", 1),
@@ -80,6 +81,7 @@ class TaskModal(ModalScreen):
             Input(
                 value=", ".join(task.tags or []) if task else "",
                 placeholder="Tags, separated by commas",
+                suggester=TagSuggester(list_task_tags()),
                 compact=True,
                 id="tags",
             ),
@@ -132,13 +134,6 @@ class TaskModal(ModalScreen):
         if not isinstance(status, TaskStatus):
             status = TaskStatus.PENDING
 
-        tags_input = self.query_one("#tags", Input).value.strip()
-        tags = []
-        for tag in tags_input.split(","):
-            if tag.strip():
-                clean_tag = tag.strip().lower()
-                tags.append(clean_tag)
-
         self.dismiss(
             NewTaskData(
                 title=title,
@@ -146,6 +141,7 @@ class TaskModal(ModalScreen):
                 status=status,
                 description=self.query_one("#description", TextArea).text,
                 deadline=deadline,
-                tags=tags,
+                # create_task/update_task normalize (strip, lower, dedupe) via normalize_tags
+                tags=self.query_one("#tags", Input).value.split(","),
             )
         )

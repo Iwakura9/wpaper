@@ -4,7 +4,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Select
 
 from models.note import NewNoteData, Note, NoteStatus
+from db.notes import list_note_tags
 from db.tasks import list_tasks
+from ui.screens.modals.tag_suggester import TagSuggester
 
 
 class EditNoteModal(ModalScreen):
@@ -46,6 +48,7 @@ class EditNoteModal(ModalScreen):
             Input(
                 value=", ".join(self.note.tags or []),
                 placeholder="Tags, separated by commas",
+                suggester=TagSuggester(list_note_tags()),
                 compact=True,
                 id="tags",
             ),

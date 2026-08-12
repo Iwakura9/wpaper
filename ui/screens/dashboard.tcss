@@ -28,7 +28,7 @@
 #note_board.grid_view {
     layout: grid;
     grid-size: 4;
-    grid-rows: 3;
+    grid-rows: 4;
 }
 
 #note_board.kanban_view {

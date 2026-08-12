@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import Screen
@@ -70,6 +71,12 @@ class DashboardScreen(Screen):
         ("n", "new_note", "New note"),
         ("t", "new_task", "New task"),
         ("d", "delete_task", "Delete task"),
+        # The DataTable consumes the arrows itself, so these only ever fire on a focused
+        # NoteCard, which is a Static and lets them through to the screen.
+        Binding("up", "focus_card(0, -1)", show=False),
+        Binding("down", "focus_card(0, 1)", show=False),
+        Binding("left", "focus_card(-1, 0)", show=False),
+        Binding("right", "focus_card(1, 0)", show=False),
     ]
 
     def __init__(self):
@@ -152,7 +159,44 @@ class DashboardScreen(Screen):
                 )
                 await board.mount(column)
 
-    # ponytail: Tab between cards, arrow-key nav if it's missed
+    def note_card_cells(self) -> dict[tuple[int, int], NoteCard]:
+        """Maps every note card to its (column, row) on the board."""
+        board = self.query_one("#note_board", Vertical)
+        if self.notes_view == "grid":
+            # Cards are children of the grid in row-major order; the column count is the
+            # tcss grid-size, read back so there is no constant to keep in sync.
+            columns = board.styles.grid_size_columns or 4
+            return {
+                (index % columns, index // columns): card
+                for index, card in enumerate(board.query(NoteCard))
+            }
+        return {
+            (column_index, row): card
+            for column_index, column in enumerate(board.query(".column"))
+            for row, card in enumerate(column.query(NoteCard))
+        }
+
+    def action_focus_card(self, dcol: int, drow: int) -> None:
+        card = self.focused
+        if not isinstance(card, NoteCard):
+            return
+
+        cells = self.note_card_cells()
+        origin = next((pos for pos, other in cells.items() if other is card), None)
+        if origin is None:
+            return
+        col, row = origin
+
+        if drow:
+            target = cells.get((col, row + drow))
+        else:
+            # Columns are ragged, so a sideways move lands on the nearest card there.
+            column = [pos for pos in cells if pos[0] == col + dcol]
+            target = cells[min(column, key=lambda pos: abs(pos[1] - row))] if column else None
+
+        if target is not None:
+            target.focus()
+
     def on_note_card_opened(self, message: NoteCard.Opened) -> None:
         self.app.push_screen(WritingScreen(message.note))
 

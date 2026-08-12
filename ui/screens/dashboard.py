@@ -6,7 +6,7 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Static
 
-from db.notes import list_notes
+from db.notes import delete_note, list_notes
 from db.stats import dashboard_stats
 from db.tasks import create_task, delete_task, format_deadline, list_tasks, update_task
 from models.note import Note, NoteStatus
@@ -31,9 +31,17 @@ def format_status(status: TaskStatus) -> str:
 class NoteCard(Static):
     can_focus = True
 
-    BINDINGS = [("enter", "open", "Open")]
+    BINDINGS = [
+        ("enter", "open", "Open"),
+        ("d", "delete", "Delete note"),
+    ]
 
     class Opened(Message):
+        def __init__(self, note: Note) -> None:
+            self.note = note
+            super().__init__()
+
+    class DeleteRequested(Message):
         def __init__(self, note: Note) -> None:
             self.note = note
             super().__init__()
@@ -48,6 +56,9 @@ class NoteCard(Static):
 
     def action_open(self) -> None:
         self.post_message(self.Opened(self.note))
+
+    def action_delete(self) -> None:
+        self.post_message(self.DeleteRequested(self.note))
 
 
 class DashboardScreen(Screen):
@@ -145,6 +156,19 @@ class DashboardScreen(Screen):
     def on_note_card_opened(self, message: NoteCard.Opened) -> None:
         self.app.push_screen(WritingScreen(message.note))
 
+    def on_note_card_delete_requested(self, message: NoteCard.DeleteRequested) -> None:
+        note = message.note
+        self.app.push_screen(
+            ConfirmModal(f'Delete "{note.title}"?'),
+            lambda confirmed: self.on_note_delete_confirmed(note.id, confirmed),
+        )
+
+    def on_note_delete_confirmed(self, note_id: int, confirmed: bool | None) -> None:
+        if not confirmed:
+            return
+        delete_note(note_id)
+        self.call_next(self.reload)
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         task = self.tasks_by_row.get(event.row_key.value)
         if task is None:
@@ -182,7 +206,8 @@ class DashboardScreen(Screen):
         self.notify("Task created!")
         self.call_next(self.reload)
 
-    # ponytail: always acts on the tasks table's cursor row, even with focus on the note board
+    # NoteCard owns its own "d" binding (deletes that note) and shadows this one while
+    # focused; everywhere else "d" falls through to here and deletes the table's cursor row.
     def action_delete_task(self) -> None:
         table = self.query_one("#tasks", DataTable)
         if table.row_count == 0:

@@ -63,7 +63,7 @@ class TaskModal(ModalScreen):
             ),
             Input(
                 value=format_deadline(task.deadline) if task else "",
-                placeholder="Deadline (YYYY-MM-DD)",
+                placeholder="Deadline (DD-MM-YYYY)",
                 compact=True,
                 id="deadline",
             ),
@@ -109,7 +109,7 @@ class TaskModal(ModalScreen):
         try:
             deadline = parse_deadline(self.query_one("#deadline", Input).value)
         except ValueError:
-            self.notify("Deadline must be YYYY-MM-DD", severity="error")
+            self.notify("Deadline must be DD-MM-YYYY", severity="error")
             return
 
         importance = self.query_one("#importance", Select).value

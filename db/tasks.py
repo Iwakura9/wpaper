@@ -3,7 +3,7 @@ from datetime import datetime
 from models.task import NewTaskData, Task, TaskStatus
 from db.connection import get_connection, normalize_tags, now_timestamp
 
-DEADLINE_FORMAT = "%Y-%m-%d"
+DEADLINE_FORMAT = "%d-%m-%Y"
 
 def parse_deadline(text: str) -> int | None:
     text = text.strip()

@@ -109,6 +109,14 @@ def read_note_content(note: Note) -> str:
         return ""
     return file_path.read_text(encoding="utf-8")
 
+def delete_note(note_id: int) -> None:
+    with get_connection() as con:
+        row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
+        if row is not None:
+            (get_notes_dir() / row["file_path"]).unlink(missing_ok=True)
+
+        con.execute("DELETE FROM notes WHERE id = ?", (note_id,))
+
 def list_notes() -> list[Note]:
     with get_connection() as con:
         rows = con.execute("""

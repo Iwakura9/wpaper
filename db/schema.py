@@ -11,7 +11,8 @@ def initialize_db() -> None:
             status TEXT NOT NULL DEFAULT 'pending',
             description TEXT NOT NULL DEFAULT '',
             deadline INTEGER,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            completed_at INTEGER
            )
         """)
 
@@ -44,8 +45,12 @@ def initialize_db() -> None:
         """)
 
         # ponytail: ad-hoc migration, real migration system when a destructive change lands
-        columns = {row["name"] for row in con.execute("PRAGMA table_info(notes)")}
-        if "linked_task_id" not in columns:
+        note_columns = {row["name"] for row in con.execute("PRAGMA table_info(notes)")}
+        if "linked_task_id" not in note_columns:
             con.execute(
                 "ALTER TABLE notes ADD COLUMN linked_task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL"
             )
+
+        task_columns = {row["name"] for row in con.execute("PRAGMA table_info(tasks)")}
+        if "completed_at" not in task_columns:
+            con.execute("ALTER TABLE tasks ADD COLUMN completed_at INTEGER")

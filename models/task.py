@@ -26,3 +26,4 @@ class Task:
     description: str = ""
     deadline: int | None = None
     tags: list[str] | None = None
+    completed_at: int | None = None

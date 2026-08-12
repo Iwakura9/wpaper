@@ -26,6 +26,7 @@ def _replace_tags(con, task_id: int, tags: list[str]) -> None:
 
 def create_task(data: NewTaskData) -> Task:
     now = now_timestamp()
+    completed_at = now if data.status is TaskStatus.COMPLETE else None
 
     with get_connection() as con:
         cursor = con.execute("""
@@ -35,9 +36,10 @@ def create_task(data: NewTaskData) -> Task:
                 status,
                 description,
                 deadline,
-                created_at
+                created_at,
+                completed_at
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 data.title,
@@ -46,6 +48,7 @@ def create_task(data: NewTaskData) -> Task:
                 data.description,
                 data.deadline,
                 now,
+                completed_at,
             ),
         )
 
@@ -65,6 +68,7 @@ def create_task(data: NewTaskData) -> Task:
             description=data.description,
             deadline=data.deadline,
             created_at=now,
+            completed_at=completed_at,
             tags=tags,
         )
 
@@ -74,7 +78,8 @@ def update_task(task_id: int, data: NewTaskData) -> None:
         con.execute(
             """
             UPDATE tasks
-            SET title = ?, importance = ?, status = ?, description = ?, deadline = ?
+            SET title = ?, importance = ?, status = ?, description = ?, deadline = ?,
+                completed_at = CASE WHEN ? = 'complete' THEN COALESCE(completed_at, ?) ELSE NULL END
             WHERE id = ?
             """,
             (
@@ -83,6 +88,8 @@ def update_task(task_id: int, data: NewTaskData) -> None:
                 data.status.value,
                 data.description,
                 data.deadline,
+                data.status.value,
+                now_timestamp(),
                 task_id,
             ),
         )
@@ -104,7 +111,8 @@ def list_tasks() -> list[Task]:
                 status,
                 description,
                 deadline,
-                created_at
+                created_at,
+                completed_at
             FROM tasks
             ORDER BY
                 status IN ('complete', 'abandoned'),
@@ -134,6 +142,7 @@ def list_tasks() -> list[Task]:
             description=row["description"],
             deadline=row["deadline"],
             created_at=row["created_at"],
+            completed_at=row["completed_at"],
             tags=tags_by_task.get(row["id"], []),
         )
         for row in rows

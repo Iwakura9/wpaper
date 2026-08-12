@@ -24,6 +24,10 @@ def days_left(deadline: int | None) -> str:
     return str(delta.days)
 
 
+def format_status(status: TaskStatus) -> str:
+    return status.value.replace("_", " ").capitalize()
+
+
 class NoteCard(Static):
     can_focus = True
 
@@ -51,7 +55,7 @@ class DashboardScreen(Screen):
 
     BINDINGS = [
         ("escape", "back", "Back"),
-        ("v", "toggle_notes_view", "Toggle notes view"),
+        ("v", "toggle_notes_view", "Toggle view"),
         ("n", "new_note", "New note"),
         ("t", "new_task", "New task"),
         ("d", "delete_task", "Delete task"),
@@ -110,7 +114,7 @@ class DashboardScreen(Screen):
             table.add_row(
                 str(task.importance),
                 task.title,
-                task.status.value,
+                format_status(task.status),
                 days_left(task.deadline),
                 format_deadline(task.deadline),
                 key=row_key,

@@ -9,9 +9,27 @@ from textual.widgets import Input, ListItem, ListView, Static
 
 from db.search import SNIPPET_END, SNIPPET_START, Hit, search, sync_index
 from db.tasks import format_deadline
-from models.note import Note
-from models.task import Task
+from models.note import Note, NoteStatus
+from models.task import Task, TaskStatus
 from ui.screens.dashboard import format_status
+
+# "blue" (a base 16-color ANSI name) gets remapped to a purple accent by Textual's theme;
+# dodger_blue2 is a fixed 256-palette color so it always renders as an actual blue
+NOTE_STATUS_COLOR = {
+    NoteStatus.WRITING: "dodger_blue2",
+    NoteStatus.DONE: "pale_green3",
+    NoteStatus.HIATUS: "dark_orange",
+    NoteStatus.ABANDONED: "dark_red",
+}
+TASK_STATUS_COLOR = {
+    TaskStatus.PENDING: "dark_orange",
+    TaskStatus.IN_PROGRESS: "dodger_blue2",
+    TaskStatus.COMPLETE: "pale_green3",
+    TaskStatus.ABANDONED: "dark_red",
+}
+
+REST_WIDTH = 20  # fits "!5  ·  31-12-2026"
+STATUS_WIDTH = 13  # fits "In progress" / "abandoned"
 
 
 def _snippet_text(snippet: str) -> Text:
@@ -27,27 +45,38 @@ def _snippet_text(snippet: str) -> Text:
     return text
 
 
-def _meta_text(item: Note | Task) -> Text:
-    if isinstance(item, Note):
-        meta = Text(item.status.value, style="dim")
-        if item.tags:
-            meta.append("  ·  " + ", ".join(item.tags), style="dim")
-        return meta
+def _title_cell(item: Note | Task) -> Text:
+    text = Text(item.title, style="bold", overflow="ellipsis", no_wrap=True)
+    if item.tags:
+        text.append("  " + ", ".join(item.tags), style="dim")
+    return text
 
-    meta = Text(f"{format_status(item.status)}  ·  !{item.importance}", style="dim")
+
+def _rest_cell(item: Note | Task) -> Text:
+    if isinstance(item, Note):
+        return Text("")
+    rest = Text(f"!{item.importance}", style="dim")
     deadline = format_deadline(item.deadline)
     if deadline:
-        meta.append(f"  ·  {deadline}", style="dim")
-    return meta
+        rest.append(f"  ·  {deadline}", style="dim")
+    return rest
+
+
+def _status_cell(item: Note | Task) -> Text:
+    if isinstance(item, Note):
+        return Text(item.status.value, style=NOTE_STATUS_COLOR[item.status])
+    return Text(format_status(item.status), style=TASK_STATUS_COLOR[item.status])
 
 
 def _render_hit(hit: Hit) -> Table:
-    # a grid, not a markup string: keeps the title/meta columns aligned regardless of
-    # title length, and truncates a long title with an ellipsis instead of wrapping it
+    # fixed-width right columns, not content-sized: each row is its own independent
+    # Table.grid(), so a content-sized column lands at a different x per row (what made
+    # the status column look staggered); a fixed width lines every row up identically
     grid = Table.grid(expand=True, padding=(0, 0, 0, 1))
     grid.add_column(ratio=1, overflow="ellipsis", no_wrap=True)
-    grid.add_column(justify="right", no_wrap=True)
-    grid.add_row(Text(hit.item.title, style="bold", overflow="ellipsis", no_wrap=True), _meta_text(hit.item))
+    grid.add_column(width=REST_WIDTH, justify="right", no_wrap=True, overflow="crop")
+    grid.add_column(width=STATUS_WIDTH, justify="right", no_wrap=True, overflow="crop")
+    grid.add_row(_title_cell(hit.item), _rest_cell(hit.item), _status_cell(hit.item))
     if hit.snippet:
         grid.add_row(_snippet_text(hit.snippet))
     return grid

@@ -5,12 +5,18 @@ import subprocess
 
 from textual.app import App, SuspendNotSupported
 
+import config
 from db.notes import read_note_content, update_note_content
 from db.notes import get_notes_dir
 from models.note import Note
 
 
 def editor_command() -> list[str] | None:
+    alt_editor = config.load()["alt_editor"]
+    parts = shlex.split(alt_editor)
+    if parts and shutil.which(parts[0]):
+        return parts
+
     for name in ("nvim", "vim"):
         if shutil.which(name):
             return [name]

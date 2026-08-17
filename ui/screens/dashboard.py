@@ -7,6 +7,7 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Static
 
+import config
 from db.notes import delete_note, list_notes
 from db.stats import dashboard_stats
 from db.tasks import create_task, delete_task, format_deadline, format_status, list_tasks, update_task
@@ -17,7 +18,6 @@ from ui.external_editor import open_note_in_editor
 from ui.screens.modals.new_note_modal import NewNoteModal
 from ui.screens.modals.search_modal import SearchModal
 from ui.screens.modals.task_modal import TaskModal
-from ui.screens.writing import WritingScreen
 
 
 def days_left(deadline: int | None) -> str:
@@ -87,7 +87,7 @@ class DashboardScreen(Screen):
 
     def __init__(self):
         super().__init__()
-        self.notes_view = "grid"
+        self.notes_view = config.load()["notes_view"]
         self.tasks_by_row: dict[str, Task] = {}
 
     def compose(self) -> ComposeResult:
@@ -208,7 +208,7 @@ class DashboardScreen(Screen):
             target.focus()
 
     def on_note_card_opened(self, message: NoteCard.Opened) -> None:
-        self.app.push_screen(WritingScreen(message.note))
+        self.app.open_note(message.note)
 
     def on_note_card_delete_requested(self, message: NoteCard.DeleteRequested) -> None:
         note = message.note
@@ -247,6 +247,7 @@ class DashboardScreen(Screen):
 
     def action_toggle_notes_view(self) -> None:
         self.notes_view = "kanban" if self.notes_view == "grid" else "grid"
+        config.save(notes_view=self.notes_view)
         self.call_next(self.rebuild_note_board)
 
     def action_new_note(self) -> None:
@@ -255,7 +256,7 @@ class DashboardScreen(Screen):
     def open_writing_screen(self, note: Note | None) -> None:
         if note is None:
             return
-        self.app.push_screen(WritingScreen(note))
+        self.app.open_note(note)
 
     def action_new_task(self) -> None:
         self.app.push_screen(TaskModal(), self.on_task_created)

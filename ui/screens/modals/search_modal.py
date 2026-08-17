@@ -102,7 +102,7 @@ class SearchModal(ModalScreen):
 
     def compose(self) -> ComposeResult:
         container = Vertical(
-            Input(placeholder="Search notes and tasks…", id="search_query"),
+            Input(placeholder="Search notes and tasks…", compact=True, id="search_query"),
             ListView(id="search_results"),
             id="search_modal",
         )

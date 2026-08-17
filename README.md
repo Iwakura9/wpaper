@@ -30,7 +30,7 @@ git clone https://github.com/Iwakura9/wpaper.git
 cd wpaper
 python -m venv .venv
 source .venv/bin/activate
-pip install textual rich
+pip install -r requirements.txt
 ```
 
 ## How to run

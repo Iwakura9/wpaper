@@ -51,14 +51,10 @@ class NoteCard(Static):
             self.note = note
             super().__init__()
 
-    def __init__(self, note: Note, task_title: str | None = None):
+    def __init__(self, note: Note):
         updated = datetime.fromtimestamp(note.updated_at).strftime("%d %b, %Y")
         lines = [note.title, f"{note.status.value} · {updated}"]
-        if note.tags:
-            lines.append(", ".join(note.tags))
-        if task_title:
-            lines.append(f"→ {task_title}")
-        super().__init__("\n".join(lines), classes="note_card")
+        super().__init__("\n".join(lines), classes=f"note_card status-{note.status.value}")
         self.note = note
 
     def action_open(self) -> None:
@@ -157,10 +153,9 @@ class DashboardScreen(Screen):
         board.set_classes("grid_view" if self.notes_view == "grid" else "kanban_view")
 
         notes = list_notes()
-        task_titles = {task.id: task.title for task in list_tasks()}
 
         def card(note: Note) -> NoteCard:
-            return NoteCard(note, task_titles.get(note.linked_task_id))
+            return NoteCard(note)
 
         if self.notes_view == "grid":
             await board.mount_all(card(note) for note in notes)

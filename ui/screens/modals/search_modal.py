@@ -46,9 +46,12 @@ def _snippet_text(snippet: str) -> Text:
 
 
 def _title_cell(item: Note | Task) -> Text:
-    text = Text(item.title, style="bold", overflow="ellipsis", no_wrap=True)
+    # "bold" goes on a span over just the title, not the Text object's base style,
+    # so it doesn't bleed into the tags span appended after it
+    text = Text(overflow="ellipsis", no_wrap=True)
+    text.append(item.title, style="bold")
     if item.tags:
-        text.append("  " + ", ".join(item.tags), style="dim")
+        text.append("  " + ", ".join(item.tags), style="medium_purple")
     return text
 
 

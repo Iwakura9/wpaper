@@ -1,4 +1,7 @@
 .venv/
 local/
+ignora/
 __pycache__/
 *.sqlite
+CLAUDE.md
+.claude/

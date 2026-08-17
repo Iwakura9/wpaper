@@ -14,7 +14,7 @@ from models.task import NewTaskData
 from db.tasks import create_task
 
 def load_random_logo() -> str:
-    logos_path = Path("ui/logos.txt")
+    logos_path = Path(__file__).parent.parent / "logos.txt"
     content = logos_path.read_text(encoding="utf-8")
 
     logos = [

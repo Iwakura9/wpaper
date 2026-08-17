@@ -164,7 +164,7 @@ class DashboardScreen(Screen):
                 column_notes = [note for note in notes if note.status is status]
                 column = Vertical(
                     Static(status.value.title(), classes="column_header"),
-                    *[card(note) for note in column_notes],
+                    Vertical(*[card(note) for note in column_notes], classes="column_body"),
                     classes="column",
                 )
                 await board.mount(column)

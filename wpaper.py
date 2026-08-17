@@ -15,6 +15,14 @@ from ui.screens.writing import WritingScreen
 class WpaperApp(App):
     TITLE = "wpaper"
 
+    # default vertical scrollbar is 2 cells wide; every scrollable widget in the app
+    # (note board, kanban columns, DataTable, ...) picks this up via the universal selector
+    CSS = """
+    * {
+        scrollbar-size-vertical: 1;
+    }
+    """
+
     SCREENS = {
         "home": HomeScreen,
         "dashboard": DashboardScreen,

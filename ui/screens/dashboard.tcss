@@ -23,6 +23,7 @@
 #note_board {
     height: 1fr;
     padding: 1 2;
+    overflow-y: auto;
 }
 
 #note_board.grid_view {
@@ -47,6 +48,11 @@
     color: lightslategrey;
     content-align: center middle;
     height: 1;
+}
+
+.column_body {
+    height: 1fr;
+    overflow-y: auto;
 }
 
 .note_card {

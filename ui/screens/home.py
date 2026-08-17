@@ -7,6 +7,7 @@ from textual.screen import Screen
 from textual.containers import Vertical
 
 from ui.screens.modals.new_note_modal import NewNoteModal
+from ui.screens.modals.search_modal import SearchModal
 from ui.screens.modals.task_modal import TaskModal
 from ui.screens.writing import WritingScreen
 from models.note import Note
@@ -33,6 +34,7 @@ class HomeScreen(Screen):
         ("t", "new_task"),
         ("d", "view_dashboard"),
         ("q", "quit"),
+        ("/", "global_search"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -65,6 +67,9 @@ class HomeScreen(Screen):
 
     def action_view_dashboard(self) -> None:
         self.app.push_screen("dashboard")
+
+    def action_global_search(self) -> None:
+        self.app.push_screen(SearchModal(), self.app.open_hit)
 
     def action_quit(self) -> None:
         self.app.exit()

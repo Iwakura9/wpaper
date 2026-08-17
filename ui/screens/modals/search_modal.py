@@ -8,10 +8,9 @@ from textual.screen import ModalScreen
 from textual.widgets import Input, ListItem, ListView, Static
 
 from db.search import SNIPPET_END, SNIPPET_START, Hit, search, sync_index
-from db.tasks import format_deadline
+from db.tasks import format_deadline, format_status
 from models.note import Note, NoteStatus
 from models.task import Task, TaskStatus
-from ui.screens.dashboard import format_status
 
 # "blue" (a base 16-color ANSI name) gets remapped to a purple accent by Textual's theme;
 # dodger_blue2 is a fixed 256-palette color so it always renders as an actual blue

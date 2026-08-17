@@ -16,6 +16,9 @@ def format_deadline(deadline: int | None) -> str:
         return ""
     return datetime.fromtimestamp(deadline).strftime(DEADLINE_FORMAT)
 
+def format_status(status: TaskStatus) -> str:
+    return status.value.replace("_", " ").capitalize()
+
 def _replace_tags(con, task_id: int, tags: list[str]) -> None:
     con.execute("DELETE FROM task_tags WHERE task_id = ?", (task_id,))
     for tag in tags:

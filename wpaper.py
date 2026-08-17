@@ -1,5 +1,4 @@
 from textual.app import App
-from textual.screen import ModalScreen
 
 from db.schema import initialize_db
 from db.tasks import update_task
@@ -7,15 +6,12 @@ from models.note import Note
 from models.task import NewTaskData, Task
 from ui.screens.dashboard import DashboardScreen
 from ui.screens.home import HomeScreen
-from ui.screens.modals.search_modal import SearchModal
 from ui.screens.modals.task_modal import TaskModal
 from ui.screens.writing import WritingScreen
 
 
 class WpaperApp(App):
     TITLE = "wpaper"
-
-    BINDINGS = [("/", "global_search", "Search")]
 
     SCREENS = {
         "home": HomeScreen,
@@ -26,11 +22,9 @@ class WpaperApp(App):
         initialize_db()
         self.push_screen("home")
 
-    def action_global_search(self) -> None:
-        if isinstance(self.screen, ModalScreen):
-            return
-        self.push_screen(SearchModal(), self.open_hit)
-
+    # shared by HomeScreen/DashboardScreen's "/" (global search): a screen further down
+    # the stack, e.g. WritingScreen, never binds "/" at all, so its Footer never shows a
+    # search shortcut that wouldn't do anything useful there anyway
     def open_hit(self, item: Note | Task | None) -> None:
         if item is None:
             return

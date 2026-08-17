@@ -9,7 +9,6 @@ from textual.containers import Vertical
 from ui.screens.modals.new_note_modal import NewNoteModal
 from ui.screens.modals.search_modal import SearchModal
 from ui.screens.modals.task_modal import TaskModal
-from ui.screens.writing import WritingScreen
 from models.note import Note
 from models.task import NewTaskData
 from db.tasks import create_task
@@ -54,7 +53,7 @@ class HomeScreen(Screen):
     def open_writing_screen(self, note: Note | None) -> None:
         if note is None:
             return
-        self.app.push_screen(WritingScreen(note))
+        self.app.open_note(note)
 
     def action_new_task(self) -> None:
         self.app.push_screen(TaskModal(), self.on_task_created)

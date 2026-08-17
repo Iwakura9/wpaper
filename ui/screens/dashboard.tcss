@@ -28,8 +28,8 @@
 #note_board.grid_view {
     layout: grid;
     grid-size: 4;
-    /* 4 content lines (title, meta, tags, linked task) + the card's bottom margin */
-    grid-rows: 5;
+    /* 2 content lines (title, meta) + the card's bottom margin */
+    grid-rows: 3;
 }
 
 #note_board.kanban_view {
@@ -54,6 +54,23 @@
     padding: 0 1;
     margin-bottom: 1;
     color: lightsteelblue;
+}
+
+/* same status colors as the global search results (search_modal.py's NOTE_STATUS_COLOR) */
+.note_card.status-writing {
+    border-left: solid #8a6bc7;
+}
+
+.note_card.status-done {
+    border-left: solid #87d787;
+}
+
+.note_card.status-hiatus {
+    border-left: solid #d7b287;
+}
+
+.note_card.status-abandoned {
+    border-left: solid #d78787;
 }
 
 .note_card:focus {

@@ -12,19 +12,19 @@ from db.tasks import format_deadline, format_status
 from models.note import Note, NoteStatus
 from models.task import Task, TaskStatus
 
-# "blue" (a base 16-color ANSI name) gets remapped to a purple accent by Textual's theme;
-# dodger_blue2 is a fixed 256-palette color so it always renders as an actual blue
+# muted/pastel tones so no status reads louder than the others; mirrored exactly in
+# ui/screens/dashboard.tcss's .status-* rules for the board's card borders
 NOTE_STATUS_COLOR = {
-    NoteStatus.WRITING: "dodger_blue2",
-    NoteStatus.DONE: "pale_green3",
-    NoteStatus.HIATUS: "dark_orange",
-    NoteStatus.ABANDONED: "dark_red",
+    NoteStatus.WRITING: "#8a6bc7",
+    NoteStatus.DONE: "#87d787",
+    NoteStatus.HIATUS: "#d7b287",
+    NoteStatus.ABANDONED: "#d78787",
 }
 TASK_STATUS_COLOR = {
-    TaskStatus.PENDING: "dark_orange",
-    TaskStatus.IN_PROGRESS: "dodger_blue2",
-    TaskStatus.COMPLETE: "pale_green3",
-    TaskStatus.ABANDONED: "dark_red",
+    TaskStatus.PENDING: "#d7b287",
+    TaskStatus.IN_PROGRESS: "#8a6bc7",
+    TaskStatus.COMPLETE: "#87d787",
+    TaskStatus.ABANDONED: "#d78787",
 }
 
 REST_WIDTH = 20  # fits "!5  ·  31-12-2026"

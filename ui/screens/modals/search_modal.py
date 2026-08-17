@@ -1,4 +1,5 @@
-from rich.markup import escape
+from rich.table import Table
+from rich.text import Text
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -10,26 +11,46 @@ from db.search import SNIPPET_END, SNIPPET_START, Hit, search, sync_index
 from db.tasks import format_deadline
 from models.note import Note
 from models.task import Task
+from ui.screens.dashboard import format_status
 
 
-def _render_hit(hit: Hit) -> str:
-    item = hit.item
+def _snippet_text(snippet: str) -> Text:
+    # splits on the sentinel bytes db.search wraps a match in, rather than turning them
+    # into markup, so a snippet containing "[" or "]" can never be misread as a tag
+    text = Text(overflow="ellipsis", no_wrap=True, style="dim")
+    segments = snippet.split(SNIPPET_START)
+    text.append(segments[0])
+    for segment in segments[1:]:
+        marked, _, rest = segment.partition(SNIPPET_END)
+        text.append(marked, style="reverse not dim")
+        text.append(rest)
+    return text
+
+
+def _meta_text(item: Note | Task) -> Text:
     if isinstance(item, Note):
-        header = f"📝 {escape(item.title)}"
+        meta = Text(item.status.value, style="dim")
         if item.tags:
-            header += f"   [dim]{escape(', '.join(item.tags))}[/dim]"
-    else:
-        header = f"✓ {escape(item.title)}   [dim]!{item.importance}"
-        deadline = format_deadline(item.deadline)
-        if deadline:
-            header += f" {deadline}"
-        header += "[/dim]"
+            meta.append("  ·  " + ", ".join(item.tags), style="dim")
+        return meta
 
-    lines = [header]
+    meta = Text(f"{format_status(item.status)}  ·  !{item.importance}", style="dim")
+    deadline = format_deadline(item.deadline)
+    if deadline:
+        meta.append(f"  ·  {deadline}", style="dim")
+    return meta
+
+
+def _render_hit(hit: Hit) -> Table:
+    # a grid, not a markup string: keeps the title/meta columns aligned regardless of
+    # title length, and truncates a long title with an ellipsis instead of wrapping it
+    grid = Table.grid(expand=True, padding=(0, 0, 0, 1))
+    grid.add_column(ratio=1, overflow="ellipsis", no_wrap=True)
+    grid.add_column(justify="right", no_wrap=True)
+    grid.add_row(Text(hit.item.title, style="bold", overflow="ellipsis", no_wrap=True), _meta_text(hit.item))
     if hit.snippet:
-        snippet = escape(hit.snippet).replace(SNIPPET_START, "[reverse]").replace(SNIPPET_END, "[/reverse]")
-        lines.append(f"  {snippet}")
-    return "\n".join(lines)
+        grid.add_row(_snippet_text(hit.snippet))
+    return grid
 
 
 class SearchModal(ModalScreen):
@@ -48,11 +69,14 @@ class SearchModal(ModalScreen):
         self.hits: list[Hit] = []
 
     def compose(self) -> ComposeResult:
-        yield Vertical(
-            Input(placeholder="Search…  is:note  tag:x  status:y", id="search_query"),
+        container = Vertical(
+            Input(placeholder="Search notes and tasks…", id="search_query"),
             ListView(id="search_results"),
             id="search_modal",
         )
+        container.border_title = "Search"
+        container.border_subtitle = "is:note/task   tag:x   status:y"
+        yield container
 
     def on_mount(self) -> None:
         sync_index()

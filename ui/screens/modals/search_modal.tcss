@@ -4,22 +4,36 @@ SearchModal {
 
 #search_modal {
     width: 80;
-    height: 24;
-    padding: 1 2;
+    height: auto;
+    min-height: 16;
+    max-height: 30;
+    padding: 0 1;
     background: $surface;
+    border: round $primary;
 }
 
 #search_query {
     width: 100%;
+    border: none;
+    background: $panel;
+    margin-top: 1;
 }
 
 #search_results {
     width: 100%;
-    height: 1fr;
+    height: auto;
+    max-height: 24;
     margin-top: 1;
+    background: $surface;
+}
+
+#search_results ListItem {
+    padding: 0 1;
 }
 
 .search_empty {
     color: $text-muted;
     padding: 1;
+    text-align: center;
+    width: 100%;
 }

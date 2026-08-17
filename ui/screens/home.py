@@ -33,7 +33,6 @@ class HomeScreen(Screen):
         ("t", "new_task"),
         ("d", "view_dashboard"),
         ("q", "quit"),
-        ("/", "global_search"),
     ]
 
     def compose(self) -> ComposeResult:

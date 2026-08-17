@@ -1,0 +1,25 @@
+SearchModal {
+  align: center middle;
+}
+
+#search_modal {
+    width: 80;
+    height: 24;
+    padding: 1 2;
+    background: $surface;
+}
+
+#search_query {
+    width: 100%;
+}
+
+#search_results {
+    width: 100%;
+    height: 1fr;
+    margin-top: 1;
+}
+
+.search_empty {
+    color: $text-muted;
+    padding: 1;
+}

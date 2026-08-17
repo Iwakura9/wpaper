@@ -9,12 +9,13 @@ from textual.widgets import DataTable, Footer, Static
 
 from db.notes import delete_note, list_notes
 from db.stats import dashboard_stats
-from db.tasks import create_task, delete_task, format_deadline, list_tasks, update_task
+from db.tasks import create_task, delete_task, format_deadline, format_status, list_tasks, update_task
 from models.note import Note, NoteStatus
 from models.task import NewTaskData, Task, TaskStatus
 from ui.screens.modals.confirm_modal import ConfirmModal
 from ui.external_editor import open_note_in_editor
 from ui.screens.modals.new_note_modal import NewNoteModal
+from ui.screens.modals.search_modal import SearchModal
 from ui.screens.modals.task_modal import TaskModal
 from ui.screens.writing import WritingScreen
 
@@ -24,10 +25,6 @@ def days_left(deadline: int | None) -> str:
         return ""
     delta = datetime.fromtimestamp(deadline).date() - datetime.now().date()
     return str(delta.days)
-
-
-def format_status(status: TaskStatus) -> str:
-    return status.value.replace("_", " ").capitalize()
 
 
 class NoteCard(Static):
@@ -83,6 +80,7 @@ class DashboardScreen(Screen):
         ("n", "new_note", "New note"),
         ("t", "new_task", "New task"),
         ("d", "delete_task", "Delete task"),
+        ("/", "global_search", "Search"),
         # The DataTable consumes the arrows itself, so these only ever fire on a focused
         # NoteCard, which is a Static and lets them through to the screen.
         Binding("up", "focus_card(0, -1)", show=False),
@@ -248,6 +246,9 @@ class DashboardScreen(Screen):
 
     def action_back(self) -> None:
         self.app.pop_screen()
+
+    def action_global_search(self) -> None:
+        self.app.push_screen(SearchModal(), self.app.open_hit)
 
     def action_toggle_notes_view(self) -> None:
         self.notes_view = "kanban" if self.notes_view == "grid" else "grid"

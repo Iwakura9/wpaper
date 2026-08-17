@@ -54,3 +54,19 @@ def initialize_db() -> None:
         task_columns = {row["name"] for row in con.execute("PRAGMA table_info(tasks)")}
         if "completed_at" not in task_columns:
             con.execute("ALTER TABLE tasks ADD COLUMN completed_at INTEGER")
+
+        # search index (db/search.py): rowid mirrors notes.id / tasks.id, kept in sync by
+        # sync_index() rather than triggers, since note bodies live on disk, not in a column
+        con.execute("""
+           CREATE VIRTUAL TABLE IF NOT EXISTS note_index USING fts5(
+            title, body, tags, status, stamp UNINDEXED,
+            tokenize = "unicode61 remove_diacritics 2"
+           )
+        """)
+
+        con.execute("""
+           CREATE VIRTUAL TABLE IF NOT EXISTS task_index USING fts5(
+            title, body, tags, status,
+            tokenize = "unicode61 remove_diacritics 2"
+           )
+        """)

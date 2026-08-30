@@ -65,10 +65,6 @@ class HomeScreen(Screen):
         self.notify("Task created!")
 
     def action_view_dashboard(self) -> None:
-        # closed tasks are hidden by default every time the dashboard is opened; the
-        # DashboardScreen instance is reused across visits, so its own __init__ only
-        # runs once and can't reset this on repeat opens
-        self.app.get_screen("dashboard").show_all_tasks = False
         self.app.push_screen("dashboard")
 
     def action_global_search(self) -> None:

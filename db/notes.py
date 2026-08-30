@@ -78,8 +78,9 @@ def update_note_metadata(note_id: int, data: NewNoteData) -> str:
         row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
 
         new_file_path = _build_filename(note_id, data.title)
-        if new_file_path != row["file_path"]:
-            (get_notes_dir() / row["file_path"]).rename(get_notes_dir() / new_file_path)
+        old_path = get_notes_dir() / row["file_path"]
+        if new_file_path != row["file_path"] and old_path.exists():
+            old_path.rename(get_notes_dir() / new_file_path)
 
         con.execute(
             """

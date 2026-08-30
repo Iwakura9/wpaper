@@ -38,11 +38,13 @@ when something here gets done or something new turns up.
    the left and Textual's built-in `Markdown` widget on the right, toggled on a key — no new
    dependency, `textual==8.2.7` already ships `Markdown`. Decided against for now; `F3`/external
    nvim covers serious markdown editing.
-2. **Configurable data directory** — `DATA_DIR = Path.home() / "Documents" / "wpaper"` is
-   hardcoded in `db/connection.py:5`. No `WPAPER_DATA_DIR`/XDG override yet. This is the actual
-   blocker for item 3, not syncthing itself.
-3. **Cross-device sync** — the original spec's "syncthing" ask. Once (2) lands, this is "point
-   `WPAPER_DATA_DIR` at a synced folder," not new code in this repo.
+2. ~~**Configurable data directory**~~ — done: `WPAPER_DATA_DIR` env var overrides
+   `~/Documents/wpaper` (`db/connection.py:_data_dir()`, expanduser'd, read once at import time).
+   No XDG base-dir fallback chain — one env var was the actual ask.
+3. **Cross-device sync** — the original spec's "syncthing" ask. Now that (2) is done, this is
+   "point `WPAPER_DATA_DIR` at a folder syncthing watches," not new code in this repo — nothing
+   left to build unless something concrete comes up (e.g. conflict handling if two devices write
+   at once, which syncthing itself doesn't resolve for a live sqlite file).
 4. **A real tag dropdown** — `local/CONTEXT.md` asks for a dropdown of existing tags; what shipped
    is inline ghost text (`ui/screens/modals/tag_suggester.py`, `TagSuggester`). Upgrade path: an
    `OptionList` overlaid under the `Input`, or the `textual-autocomplete` package.

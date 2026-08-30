@@ -1,8 +1,19 @@
+import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-DATA_DIR = Path.home() / "Documents" / "wpaper"
+
+def _data_dir() -> Path:
+    # ponytail: WPAPER_DATA_DIR only, no full XDG base-dir fallback chain — one env var
+    # covers "point it at a synced folder", which is the only ask so far
+    override = os.environ.get("WPAPER_DATA_DIR")
+    if override:
+        return Path(override).expanduser()
+    return Path.home() / "Documents" / "wpaper"
+
+
+DATA_DIR = _data_dir()
 DB_PATH = DATA_DIR / "wpaper.sqlite"
 
 

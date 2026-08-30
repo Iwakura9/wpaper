@@ -39,3 +39,11 @@ pip install -r requirements.txt
 source .venv/bin/activate
 python wpaper.py
 ```
+
+By default all data (the sqlite database and note files) lives in `~/Documents/wpaper`. Set
+`WPAPER_DATA_DIR` to use a different folder instead — for example, a folder synced by
+[Syncthing](https://syncthing.net/) to share notes and tasks across devices:
+
+```bash
+WPAPER_DATA_DIR=~/Sync/wpaper python wpaper.py
+```

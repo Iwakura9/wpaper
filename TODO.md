@@ -5,26 +5,14 @@ when something here gets done or something new turns up.
 
 ## Bugs
 
-- `db/connection.py:25` — `get_connection()` never closes the connection it opens; `with con`
-  only commits/rolls back, it doesn't call `close()`. Leaks a handle per call.
-- `db/notes.py` (`update_note_content`, `delete_note`) — both assume the row still exists
-  (`row["file_path"]` on a `None` row raises `TypeError`) if the note was deleted between the
-  read and the write. Narrow race, but the same shared-connection pattern as everything else in
-  `db/`, so worth a `if row is None: return` guard once touched again.
 - `db/search.py:64` — `sync_index()` runs on the UI thread. Marked `# ponytail:` already;
   measured ~85ms at 2000 notes, 15 notes today. Move to `@work` if it starts being felt.
-- `db/search.py:77` — the note re-index stamp has 1-second resolution, so two status-only edits
-  inside the same second can share a stamp and the second edit's search hit goes stale until the
-  next touch. Marked `# ponytail:` already; self-corrects on the next edit or mtime change.
 
 ## Small adjustments
 
 - DB stores `"done"` for what the design doc calls "Complete" (`models/note.py`'s `NoteStatus`).
   The kanban column header reads "Done" — fine as is, but flagging the naming mismatch in case it
   ever needs to match the spec's wording exactly.
-- `DashboardScreen.show_all_tasks` (the `a` toggle added to reveal complete/abandoned tasks) is
-  session-only, not persisted to `config.toml`. Add it there (mirroring `notes_view`) if resetting
-  on every launch turns out to be annoying.
 - `/` (global search) has no binding on `WritingScreen` — deliberate (see `wpaper.py`'s comment on
   `open_hit`), but revisit if searching mid-write turns out to be wanted.
 - No in-app editor for `alt_editor`/`force_alt_editor` — `config.toml` is hand-edited only.

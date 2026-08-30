@@ -16,7 +16,6 @@ class NewNoteModal(ModalScreen):
 
     BINDINGS = [
         ("escape", "cancel"),
-        ("e", "edit_note"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -71,9 +70,6 @@ class NewNoteModal(ModalScreen):
 
     def action_cancel(self) -> None:
         self.dismiss()
-
-    def action_edit_note(self) -> None:
-        pass
 
     def create_note(self) -> None:
         title = self.query_one("#title", Input).value.strip()

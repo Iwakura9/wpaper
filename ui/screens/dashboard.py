@@ -8,13 +8,14 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Static
 
 import config
-from db.notes import delete_note, list_notes
+from db.notes import delete_note, list_notes, update_note_metadata
 from db.stats import dashboard_stats
 from db.tasks import create_task, delete_task, format_deadline, format_status, list_tasks, update_task
-from models.note import Note, NoteStatus
+from models.note import NewNoteData, Note, NoteStatus
 from models.task import NewTaskData, Task, TaskStatus
 from ui.screens.modals.confirm_modal import ConfirmModal
 from ui.external_editor import open_note_in_editor
+from ui.screens.modals.edit_note_modal import EditNoteModal
 from ui.screens.modals.new_note_modal import NewNoteModal
 from ui.screens.modals.search_modal import SearchModal
 from ui.screens.modals.task_modal import TaskModal
@@ -34,6 +35,7 @@ class NoteCard(Static):
         ("enter", "open", "Open"),
         ("d", "delete", "Delete note"),
         ("e", "edit_external", "Edit in editor"),
+        ("f2", "edit_metadata", "Edit note"),
     ]
 
     class Opened(Message):
@@ -47,6 +49,11 @@ class NoteCard(Static):
             super().__init__()
 
     class EditExternalRequested(Message):
+        def __init__(self, note: Note) -> None:
+            self.note = note
+            super().__init__()
+
+    class EditRequested(Message):
         def __init__(self, note: Note) -> None:
             self.note = note
             super().__init__()
@@ -66,6 +73,9 @@ class NoteCard(Static):
     def action_edit_external(self) -> None:
         self.post_message(self.EditExternalRequested(self.note))
 
+    def action_edit_metadata(self) -> None:
+        self.post_message(self.EditRequested(self.note))
+
 
 class DashboardScreen(Screen):
     CSS_PATH = "dashboard.tcss"
@@ -76,6 +86,7 @@ class DashboardScreen(Screen):
         ("n", "new_note", "New note"),
         ("t", "new_task", "New task"),
         ("d", "delete_task", "Delete task"),
+        ("a", "toggle_all_tasks", "All tasks"),
         ("/", "global_search", "Search"),
         # The DataTable consumes the arrows itself, so these only ever fire on a focused
         # NoteCard, which is a Static and lets them through to the screen.
@@ -89,6 +100,7 @@ class DashboardScreen(Screen):
         super().__init__()
         self.notes_view = config.load()["notes_view"]
         self.tasks_by_row: dict[str, Task] = {}
+        self.show_all_tasks = False
 
     def compose(self) -> ComposeResult:
         yield Vertical(
@@ -127,13 +139,17 @@ class DashboardScreen(Screen):
         table = self.query_one("#tasks", DataTable)
         table.clear()
         self.tasks_by_row = {}
+        all_tasks = list_tasks()
         open_tasks = [
-            task
-            for task in list_tasks()
-            if task.status in (TaskStatus.PENDING, TaskStatus.IN_PROGRESS)
+            task for task in all_tasks if task.status in (TaskStatus.PENDING, TaskStatus.IN_PROGRESS)
         ]
         open_tasks.sort(key=lambda task: (task.deadline is None, task.deadline or 0, task.importance))
-        for task in open_tasks:
+        # closed tasks stay in list_tasks()'s own order (already sunk to the bottom)
+        closed_tasks = [
+            task for task in all_tasks if task.status not in (TaskStatus.PENDING, TaskStatus.IN_PROGRESS)
+        ]
+        rows = open_tasks + closed_tasks if self.show_all_tasks else open_tasks
+        for task in rows:
             row_key = str(task.id)
             table.add_row(
                 str(task.importance),
@@ -227,6 +243,16 @@ class DashboardScreen(Screen):
         if open_note_in_editor(self.app, message.note):
             self.call_next(self.reload)
 
+    def on_note_card_edit_requested(self, message: NoteCard.EditRequested) -> None:
+        note = message.note
+        self.app.push_screen(EditNoteModal(note), lambda data: self.on_note_edited(note.id, data))
+
+    def on_note_edited(self, note_id: int, data: NewNoteData | None) -> None:
+        if data is None:
+            return
+        update_note_metadata(note_id, data)
+        self.call_next(self.reload)
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         task = self.tasks_by_row.get(event.row_key.value)
         if task is None:
@@ -241,6 +267,10 @@ class DashboardScreen(Screen):
 
     def action_back(self) -> None:
         self.app.pop_screen()
+
+    def action_toggle_all_tasks(self) -> None:
+        self.show_all_tasks = not self.show_all_tasks
+        self.call_next(self.reload)
 
     def action_global_search(self) -> None:
         self.app.push_screen(SearchModal(), self.app.open_hit)

@@ -19,6 +19,9 @@ alt_editor = {alt_editor!r}
 # true  = notes always open in alt_editor
 # false = notes open in wpaper's editor; F3 still opens alt_editor
 force_alt_editor = {force_alt_editor}
+
+# Dashboard's "a" toggle: show complete/abandoned tasks too. Saved automatically.
+show_all_tasks = {show_all_tasks}
 """
 
 DEFAULTS = {
@@ -26,7 +29,10 @@ DEFAULTS = {
     "notes_view": "grid",
     "alt_editor": "",
     "force_alt_editor": False,
+    "show_all_tasks": False,
 }
+
+BOOL_KEYS = ("force_alt_editor", "show_all_tasks")
 
 
 def config_path():
@@ -51,7 +57,8 @@ def load() -> dict:
 
 def save(**changes) -> None:
     config = load() | changes
-    config["force_alt_editor"] = "true" if config["force_alt_editor"] else "false"
+    for key in BOOL_KEYS:
+        config[key] = "true" if config[key] else "false"
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(TEMPLATE.format(**config), encoding="utf-8")
@@ -70,12 +77,13 @@ def demo() -> None:
         assert load()["theme"] == "gruvbox"
         assert load()["notes_view"] == "grid"
 
-        save(notes_view="kanban", alt_editor="hx", force_alt_editor=True)
+        save(notes_view="kanban", alt_editor="hx", force_alt_editor=True, show_all_tasks=True)
         config = load()
         assert config["theme"] == "gruvbox"
         assert config["notes_view"] == "kanban"
         assert config["alt_editor"] == "hx"
         assert config["force_alt_editor"] is True
+        assert config["show_all_tasks"] is True
 
         config_path().write_text("theme = 42\nunknown_key = 1\nnotes_view = ", encoding="utf-8")
         assert load() == DEFAULTS

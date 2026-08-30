@@ -98,9 +98,10 @@ class DashboardScreen(Screen):
 
     def __init__(self):
         super().__init__()
-        self.notes_view = config.load()["notes_view"]
+        cfg = config.load()
+        self.notes_view = cfg["notes_view"]
         self.tasks_by_row: dict[str, Task] = {}
-        self.show_all_tasks = False
+        self.show_all_tasks = cfg["show_all_tasks"]
 
     def compose(self) -> ComposeResult:
         yield Vertical(
@@ -270,6 +271,7 @@ class DashboardScreen(Screen):
 
     def action_toggle_all_tasks(self) -> None:
         self.show_all_tasks = not self.show_all_tasks
+        config.save(show_all_tasks=self.show_all_tasks)
         self.call_next(self.reload)
 
     def action_global_search(self) -> None:

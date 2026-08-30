@@ -76,8 +76,10 @@ def create_note(data: NewNoteData) -> Note: # retorna ID
 def update_note_metadata(note_id: int, data: NewNoteData) -> str:
     with get_connection() as con:
         row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
-
         new_file_path = _build_filename(note_id, data.title)
+        if row is None:
+            return new_file_path
+
         old_path = get_notes_dir() / row["file_path"]
         if new_file_path != row["file_path"] and old_path.exists():
             old_path.rename(get_notes_dir() / new_file_path)
@@ -106,6 +108,8 @@ def update_note_metadata(note_id: int, data: NewNoteData) -> str:
 def update_note_content(note_id: int, content: str) -> None:
     with get_connection() as con:
         row = con.execute("SELECT file_path FROM notes WHERE id = ?", (note_id,)).fetchone()
+        if row is None:
+            return
         (get_notes_dir() / row["file_path"]).write_text(content, encoding="utf-8")
 
         con.execute("""

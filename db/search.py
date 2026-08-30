@@ -74,9 +74,10 @@ def sync_index() -> None:
                 mtime_ns = (notes_dir / note.file_path).stat().st_mtime_ns
             except OSError:
                 mtime_ns = 0
-            # ponytail: updated_at has 1s resolution, so two status-only edits in the same
-            # second could share a stamp; the next edit (or mtime change) self-corrects it
-            stamp = f"{note.file_path}|{note.updated_at}|{mtime_ns}"
+            stamp = (
+                f"{note.file_path}|{note.updated_at}|{mtime_ns}|"
+                f"{note.status.value}|{','.join(note.tags or [])}"
+            )
             if existing_stamps.get(note.id) == stamp:
                 continue
             con.execute("DELETE FROM note_index WHERE rowid = ?", (note.id,))

@@ -8,6 +8,7 @@ from models.note import NewNoteData, Note
 from db.connection import normalize_tags
 from db.notes import read_note_content, update_note_content, update_note_metadata
 from ui.external_editor import open_note_in_editor
+from ui.screens.modals.confirm_modal import ConfirmModal
 from ui.screens.modals.edit_note_modal import EditNoteModal
 
 class WritingScreen(Screen):
@@ -15,8 +16,7 @@ class WritingScreen(Screen):
 
     BINDINGS = [
         ("ctrl+s", "save_note", "Save"),
-        ("ctrl+c", "quit_no_save", "Quit"), # temporário, depois tirar
-        ("escape", "quit_no_save", "Back"),
+        ("escape", "back", "Back"),
         ("f2", "open_menu", "Menu"),
         ("f3", "edit_external", "Editor"),
     ]
@@ -24,16 +24,17 @@ class WritingScreen(Screen):
     def __init__(self, note: Note):
         super().__init__()
         self.note = note
+        self.saved_body = read_note_content(note)
 
     def compose(self) -> ComposeResult:
         yield Vertical(
             Vertical(
                 Static(self.note.title, id="note_title"),
-                Static(datetime.now().strftime("%d %b, %Y"), id="note_date"),
+                Static(datetime.fromtimestamp(self.note.updated_at).strftime("%d %b, %Y"), id="note_date"),
                 id="header"
             ),
             TextArea(
-                text=read_note_content(self.note),
+                text=self.saved_body,
                 language="markdown",
                 soft_wrap=True,
                 show_line_numbers=True,
@@ -52,17 +53,20 @@ class WritingScreen(Screen):
         body = self.query_one("#note_body", TextArea).text
         # e manda pra funçao de atualizar o conteudo, que pede id e o texto
         update_note_content(self.note.id, body)
+        self.saved_body = body
+        self.note.updated_at = int(datetime.now().timestamp())
+        self.query_one("#note_date", Static).update(
+            datetime.fromtimestamp(self.note.updated_at).strftime("%d %b, %Y")
+        )
 
         self.notify("Note saved!")
-
-        # Futuramente salvar os metadados no SQLite e depois excluir essa bosta
-        # self.notify("Save is not implemented yet", severity="warning")
 
     def action_edit_external(self) -> None:
         body = self.query_one("#note_body", TextArea)
         update_note_content(self.note.id, body.text)
         if open_note_in_editor(self.app, self.note):
             body.text = read_note_content(self.note)
+            self.saved_body = body.text
 
     def action_open_menu(self) -> None:
         self.app.push_screen(EditNoteModal(self.note), self.on_note_edited)
@@ -79,5 +83,12 @@ class WritingScreen(Screen):
 
         self.query_one("#note_title", Static).update(result.title)
 
-    def action_quit_no_save(self) -> None:
-        self.app.pop_screen()
+    def action_back(self) -> None:
+        if self.query_one("#note_body", TextArea).text == self.saved_body:
+            self.app.pop_screen()
+            return
+        self.app.push_screen(ConfirmModal("Discard unsaved changes?"), self.on_discard_confirmed)
+
+    def on_discard_confirmed(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self.app.pop_screen()

@@ -4,4 +4,5 @@ ignora/
 __pycache__/
 *.sqlite
 CLAUDE.md
+AGENTS.md
 .claude/
